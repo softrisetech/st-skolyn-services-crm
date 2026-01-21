@@ -1,0 +1,26 @@
+services:
+  services_crm:
+    container_name: skoyln_services_crm
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        APP_PORT: ${APP_PORT} # Pass .env variable as build argumen
+    image: img_services_crm
+    extra_hosts:
+      - 'host.docker.internal:host-gateway'
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/app
+    ports:
+      - "${APP_PORT}:8000"
+    environment:
+      - APP_PORT=${APP_PORT} # Make it available in the container
+    networks:
+      - main_network
+    restart: always # Ensures restarts if it stopped
+
+networks:
+  main_network:
+    driver: bridge
+    name: main_network
