@@ -46,8 +46,8 @@ INSTALLED_APPS = [
 ]
 
 MODULAR_APPS = [
-    
-
+    'access_control',
+    'leads'
 ]
 
 INSTALLED_APPS = SYSTEM_APPS + INSTALLED_APPS + MODULAR_APPS

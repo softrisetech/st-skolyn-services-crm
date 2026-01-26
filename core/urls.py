@@ -1,7 +1,7 @@
+from rest_framework import status
 from django.urls import path, include
 from rest_framework.decorators import api_view
-from rest_framework import status
-from .utils.response_utils import *
+from .utils.response_utils import success_response
 
 
 @api_view(['GET'])
@@ -10,4 +10,6 @@ def health_check(request):
 
 urlpatterns = [
     path('', health_check, name='health_check'),
+    path('', include('access_control.urls')),
+    path('', include('leads.urls')),
 ]

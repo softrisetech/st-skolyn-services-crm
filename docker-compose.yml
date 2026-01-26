@@ -1,6 +1,6 @@
 services:
   services_crm:
-    container_name: skoyln_services_crm
+    container_name: skolyn_services_crm
     build:
       context: .
       dockerfile: Dockerfile
@@ -22,5 +22,5 @@ services:
 
 networks:
   main_network:
-    driver: bridge
+    external: true
     name: main_network

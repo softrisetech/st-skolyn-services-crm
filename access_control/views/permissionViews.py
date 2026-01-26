@@ -1,11 +1,13 @@
-from rest_framework.decorators import APIView, api_view
-from rest_framework import status
 from django.db.models import Q
-from ..models import *
+from rest_framework import status
+from collections import defaultdict
 from ..serializers import PermissionSerializer
-from core.utils.response_utils import success_response, error_response
+from ..models import Permission, RolePermission
+from rest_framework.decorators import APIView, api_view
 from core.utils.pagination_utils import CustomPagination
 from core.utils.date_time_converter import DateTimeConverter
+from core.utils.response_utils import success_response, error_response
+from ..utils.filters import filter_by_module, filter_by_type, filter_by_active
 
 class PermissionView(APIView):
     pagination_class = CustomPagination
@@ -24,18 +26,9 @@ class PermissionView(APIView):
                 Q(key__icontains=search_query)
             )
 
-        module = filters.get('module_id')
-        if module:
-            queryset = queryset.filter(module=module)
-
-        type = filters.get('type')
-        if type is not None:
-            queryset = queryset.filter(type=type)
-
-        is_active = filters.get('is_active')
-        if is_active is not None:
-            queryset = queryset.filter(is_active=is_active)
-
+        queryset = filter_by_module(queryset, filters)
+        queryset = filter_by_type(queryset, filters)
+        queryset = filter_by_active(queryset, filters)
         return queryset
 
     def get(self, request, pk=None):
@@ -120,48 +113,60 @@ def change_permission_status(request, pk=None):
         return success_response('record_updated', status.HTTP_200_OK, serializer.data)
     return error_response('record_update_failed', status.HTTP_422_UNPROCESSABLE_ENTITY, serializer.errors)
 
+
+def _split_values(value):
+    if not value:
+        return []
+    return [v.strip() for v in value.split(",") if v.strip()]
+
 @api_view(["GET"])
 def get_role_based_permissions(request):
     data = request.query_params
-    business_id = data.get("auth_business_id")
-    is_staff = data.get("auth_is_staff")
-    if is_staff == "true":
+    is_staff = data.get("auth_is_staff") == "true"
+
+    permissions = Permission.objects.all().select_related("module")
+
+    if is_staff:
         role_id = data.get("auth_role_id")
-        role_permission_ids = RolePermission.objects.filter(role_id=role_id).values("permission_id")
-        permissions = Permission.objects.filter(id__in=role_permission_ids)
-    else:
-        permissions = Permission.objects.all()
+        permission_ids = RolePermission.objects.filter(
+            role_id=role_id
+        ).values_list("permission_id", flat=True)
+        permissions = permissions.filter(id__in=permission_ids)
 
-    permission_data = PermissionSerializer(permissions, many=True).data
+    serialized_permissions = PermissionSerializer(permissions, many=True).data
 
-    result = {}
+    result = defaultdict(lambda: {
+        "module_id": None,
+        "backend_url": set(),
+        "frontend_url": set(),
+        "key": set(),
+    })
 
-    for permission in permission_data:
+    for permission in serialized_permissions:
         module_slug = permission["module_obj"]["slug"]
+        module_data = result[module_slug]
 
-        url = permission["url"] or ""
-        frontend_url = permission["frontend_url"] or ""
-        key = permission["key"] or ""
+        module_data["module_id"] = permission["module"]
+        module_data["backend_url"].update(_split_values(permission.get("url")))
+        module_data["frontend_url"].update(_split_values(permission.get("frontend_url")))
 
-        if module_slug in result:
-            if url:
-                result[module_slug]["backend_url"].extend([u.strip() for u in url.split(",") if u.strip()])
-            if frontend_url:
-                result[module_slug]["frontend_url"].extend([u.strip() for u in frontend_url.split(",") if u.strip()])
-            if key:
-                result[module_slug]["key"].append(key)
-        else:
-            result[module_slug] = {
-                "module_id": permission["module"],
-                "backend_url": [u.strip() for u in url.split(",") if u.strip()] if url else [],
-                "frontend_url": [u.strip() for u in frontend_url.split(",") if u.strip()] if frontend_url else [],
-                "key": [key] if key else []
-            }
+        key = permission.get("key")
+        if key:
+            module_data["key"].add(key)
 
-        #remove duplicates
-        for module_data in result.values():
-            module_data["backend_url"] = list(set(module_data["backend_url"]))
-            module_data["frontend_url"] = list(set(module_data["frontend_url"]))
-            module_data["key"] = list(set(module_data["key"]))
+    final_result = {
+        slug: {
+            "module_id": data["module_id"],
+            "backend_url": list(data["backend_url"]),
+            "frontend_url": list(data["frontend_url"]),
+            "key": list(data["key"]),
+        }
+        for slug, data in result.items()
+    }
 
-    return success_response('record_fetched', status.HTTP_200_OK, result)
+    return success_response(
+        "record_fetched",
+        status.HTTP_200_OK,
+        final_result
+    )
+

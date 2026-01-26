@@ -14,61 +14,44 @@ class Command(BaseCommand):
                 "name": "Leads",
                 "is_active": True,
                 "app_slug": "crm",
-            },
-            {
-                "app_id": app_id,
-                "name": "Opportunities",
-                "is_active": True,
-                "app_slug": "crm",
-            },
-            {
+                "sort_order": 1
+            },{
                 "app_id": app_id,
                 "name": "Mediums",
                 "is_active": True,
                 "app_slug": "crm",
-            },
-            {
+                "sort_order": 2
+            },{
                 "app_id": app_id,
                 "name": "Sources",
                 "is_active": True,
                 "app_slug": "crm",
-            },
-            {
+                "sort_order": 3
+            },{
                 "app_id": app_id,
                 "name": "Tags",
                 "is_active": True,
                 "app_slug": "crm",
-            },
-            {
+                "sort_order": 4
+            },{
                 "app_id": app_id,
                 "name": "Stages",
                 "is_active": True,
                 "app_slug": "crm",
+                "sort_order": 5
             },{
                 "app_id": app_id,
                 "name": "Follow Up Types",
                 "is_active": True,
                 "app_slug": "crm",
-            },{
+                "sort_order": 6
+            },
+            {
                 "app_id": app_id,
                 "name": "Lost Reasons",
                 "is_active": True,
                 "app_slug": "crm",
-            },{
-                "app_id": app_id,
-                "name": "Campaign Templates",
-                "is_active": True,
-                "app_slug": "crm",
-            },{
-                "app_id": app_id,
-                "name": "Campaigns",
-                "is_active": True,
-                "app_slug": "crm",
-            },{
-                "app_id": app_id,
-                "name": "CRM Exports",
-                "is_active": True,
-                "app_slug": "crm",
+                "sort_order": 7
             }
         ]
 
@@ -100,7 +83,8 @@ class Command(BaseCommand):
                     name=module_data["name"],
                     app_id=module_data["app_id"],
                     is_active=module_data["is_active"],
-                    app_slug=module_data["app_slug"]
+                    app_slug=module_data["app_slug"],
+                    sort_order=module_data["sort_order"]
                 )
                 self.stdout.write(self.style.SUCCESS(f'Module created: {module.name}'))
 
@@ -316,7 +300,7 @@ class Command(BaseCommand):
                     },
                     {
                         "name": "Create",
-                        "url": "leads/create, leads/migrate",
+                        "url": "leads/create",
                         "frontend_url": "/crm/lead/create",
                         "request_method": "POST",
                         "key": "",
@@ -393,107 +377,6 @@ class Command(BaseCommand):
                            "name": "Export",
                            "url": "leads/export",
                            "frontend_url": "/crm/lead/export",
-                           "request_method": "POST",
-                           "key": "",
-                           "type": 1,
-                           "sort_order": 9,
-                           "is_active": True,
-                           "module_id": module.id
-                       }
-                ])
-
-            if module.name == "Opportunities":
-                permissions.extend([
-                    {
-                        "name": "Read",
-                        "url": "opportunities, opportunities/{id}, lead/trackings, lead/trackings/{id}, lead/follow-ups, lead/follow-ups/{id}",
-                        "frontend_url": "/crm/opportunities",
-                        "request_method": "GET",
-                        "key": "",
-                        "type": 1,
-                        "sort_order": 1,
-                        "is_active": True,
-                        "module_id": module.id
-                    },
-                    {
-                        "name": "Create",
-                        "url": "opportunities/create, opportunities/migrate",
-                        "frontend_url": "/crm/opportunity/create",
-                        "request_method": "POST",
-                        "key": "",
-                        "type": 1,
-                        "sort_order": 2,
-                        "is_active": True,
-                        "module_id": module.id
-                    },
-                    {
-                        "name": "Edit",
-                        "url": "opportunities/update/{id}, opportunities/change/stage/{id}",
-                        "frontend_url": "/crm/opportunities/:id/edit,/crm/opportunities/:id/follow-up,/crm/opportunities/:id/performa,/crm/opportunity/create-follow-up, opportunities/attachment/delete/{id}",
-                        "request_method": "PUT, PATCH, DELETE",
-                        "key": "",
-                        "type": 1,
-                        "sort_order": 3,
-                        "is_active": True,
-                        "module_id": module.id
-                    },
-                    {
-                        "name": "Delete",
-                        "url": "opportunities/delete/{id}",
-                        "frontend_url": "/crm/opportunities/:id/delete",
-                        "request_method": "DELETE",
-                        "key": "",
-                        "type": 1,
-                        "sort_order": 4,
-                        "is_active": True,
-                        "module_id": module.id
-                    },
-                    {
-                        "name": "View All",
-                        "url": "",
-                        "frontend_url": "",
-                        "request_method": "GET",
-                        "key": "opportunity-view-all",
-                        "type": 2,
-                        "sort_order": 5,
-                        "is_active": True,
-                        "module_id": module.id
-                    },
-                    {
-                        "name": "Modify All",
-                        "url": "",
-                        "frontend_url": "",
-                        "request_method": "PUT",
-                        "key": "opportunity-modify-all",
-                        "type": 2,
-                        "sort_order": 6,
-                        "is_active": True,
-                        "module_id": module.id
-                    },
-                     {
-                         "name": "Branch Wise",
-                         "url": "",
-                         "frontend_url": "",
-                         "request_method": "GET",
-                         "key": "branch-wise-opportunities",
-                         "type": 2,
-                         "sort_order": 7,
-                         "is_active": True,
-                         "module_id": module.id
-                     },{
-                           "name": "Import",
-                           "url": "opportunities/import",
-                           "frontend_url": "/crm/opportunity/import",
-                           "request_method": "POST",
-                           "key": "",
-                           "type": 1,
-                           "sort_order": 8,
-                           "is_active": True,
-                           "module_id": module.id
-                      },{
-                           "name": "Export",
-                           "url": "opportunities/export",
-                           "frontend_url": "/crm/opportunity/export",
                            "request_method": "POST",
                            "key": "",
                            "type": 1,
@@ -597,150 +480,6 @@ class Command(BaseCommand):
                          "is_active": True,
                          "module_id": module.id
                      }
-                ])
-
-            if module.name == "Campaign Templates":
-                permissions.extend([
-                    {
-                        "name": "Read",
-                        "url": "campaigns/templates, campaigns/templates/{id}",
-                        "frontend_url": "/crm/campaign/templates, /crm/campaign/templates/:id/view",
-                        "request_method": "GET",
-                        "key": "",
-                        "type": 1,
-                        "sort_order": 1,
-                        "is_active": True,
-                        "module_id": module.id
-                    },
-                    {
-                        "name": "Create",
-                        "url": "campaigns/templates",
-                        "frontend_url": "/crm/campaign/templates/create",
-                        "request_method": "POST",
-                        "key": "",
-                        "type": 1,
-                        "sort_order": 2,
-                        "is_active": True,
-                        "module_id": module.id
-                    },
-                    {
-                        "name": "Edit",
-                        "url": "campaigns/templates/{id}",
-                        "frontend_url": "/crm/campaign/templates/:id/edit",
-                        "request_method": "PUT, PATCH",
-                        "key": "",
-                        "type": 1,
-                        "sort_order": 3,
-                        "is_active": True,
-                        "module_id": module.id
-                    },
-                    {
-                        "name": "Delete",
-                        "url": "campaigns/templates/{id}",
-                        "frontend_url": "/crm/campaign/templates/:id/delete",
-                        "request_method": "DELETE",
-                        "key": "",
-                        "type": 1,
-                        "sort_order": 4,
-                        "is_active": True,
-                        "module_id": module.id
-                    }
-                ])
-
-            if module.name == "Campaigns":
-                permissions.extend([
-                    {
-                        "name": "Read",
-                        "url": "campaigns, campaigns/{id}",
-                        "frontend_url": "/crm/campaign/list, /crm/campaign/:id/view",
-                        "request_method": "GET",
-                        "key": "",
-                        "type": 1,
-                        "sort_order": 1,
-                        "is_active": True,
-                        "module_id": module.id
-                    },
-                    {
-                        "name": "Create",
-                        "url": "campaigns",
-                        "frontend_url": "/crm/campaign/create",
-                        "request_method": "POST",
-                        "key": "",
-                        "type": 1,
-                        "sort_order": 2,
-                        "is_active": True,
-                        "module_id": module.id
-                    },
-                    {
-                        "name": "Edit",
-                        "url": "campaigns/{id}, campaigns/{id}/recipients/{id}/delete, campaigns/{id}/recipients/list, campaigns/{id}/recipients/store",
-                        "frontend_url": "/crm/campaign/:id/edit",
-                        "request_method": "GET, PUT, PATCH, DELETE",
-                        "key": "",
-                        "type": 1,
-                        "sort_order": 3,
-                        "is_active": True,
-                        "module_id": module.id
-                    },
-                    {
-                        "name": "Delete",
-                        "url": "campaigns/{id}",
-                        "frontend_url": "/crm/campaign/:id/delete",
-                        "request_method": "DELETE",
-                        "key": "",
-                        "type": 1,
-                        "sort_order": 4,
-                        "is_active": True,
-                        "module_id": module.id
-                    },
-                    {
-                        "name": "View All",
-                        "url": "",
-                        "frontend_url": "",
-                        "request_method": "GET",
-                        "key": "campaign-view-all",
-                        "type": 2,
-                        "sort_order": 5,
-                        "is_active": True,
-                        "module_id": module.id
-                    },
-                    {
-                        "name": "Modify All",
-                        "url": "",
-                        "frontend_url": "",
-                        "request_method": "PUT",
-                        "key": "campaign-modify-all",
-                        "type": 2,
-                        "sort_order": 6,
-                        "is_active": True,
-                        "module_id": module.id
-                    },
-                ])
-
-            if module.name == "CRM Exports":
-                permissions.extend([
-                    {
-                        "name": "Read",
-                        "url": "report-exports/crm/",
-                        "frontend_url": "/crm/reports/export-reports",
-                        "request_method": "GET",
-                        "key": "",
-                        "type": 1,
-                        "sort_order": 1,
-                        "is_active": True,
-                        "module_id": module.id
-                    },
-                    {
-                        "name": "View All",
-                        "url": "",
-                        "frontend_url": "/crm/reports/export-reports",
-                        "request_method": "GET",
-                        "key": "report_export_view_all_crm",
-                        "type": 2,
-                        "sort_order": 2,
-                        "is_active": True,
-                        "module_id": module.id
-                    },
                 ])
 
         # Ensure there are permissions to seed before proceeding
