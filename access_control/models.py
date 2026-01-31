@@ -42,5 +42,10 @@ class Permission(BaseModel):
             return None
 
 class RolePermission(models.Model):
+    id = models.UUIDField(
+        primary_key=True,
+        default=uuid.uuid4,
+        editable=False
+    )
     role_id = models.UUIDField(null=False, db_index=True)
     permission = models.ForeignKey('Permission', on_delete=models.CASCADE, null=False, db_index=True)

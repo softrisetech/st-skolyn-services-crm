@@ -1,24 +1,25 @@
-from rest_framework.decorators import api_view
-from rest_framework import status
-from ..models import Module, RolePermission, Permission
-from ..serializers import ModuleSerializer, RolePermissionSerializer
-from core.utils.response_utils import success_response, error_response
-from core.utils.pagination_utils import CustomPagination
 import json
+from rest_framework import status
+from rest_framework.decorators import api_view
+from ..serializers import RolePermissionSerializer
+from ..models import Module, RolePermission, Permission
+from core.utils.pagination_utils import CustomPagination
+from core.utils.response_utils import success_response, error_response
 
-@api_view(['GET'])
+@api_view(['POST'])
 def role_permissions(request, pk):
     try:
+        data = request.data
         request.page_size = "all"
-        business_id = request.query_params.get('auth_business_id')
-        app_slug = request.query_params.get('app_slug')
+        business_id = data.get('auth_business_id')
+        app_slug = data.get('app_slug')
 
         # Fetch modules with related permissions
         queryset = Module.objects.filter(app_slug=app_slug, is_active=True).prefetch_related("permissions").all()
 
         # Get assigned role permissions (IDs only) as a set for fast lookup
         assigned_permissions = set(
-            RolePermission.objects.filter(role_id=pk).values_list("permission_id", flat=True)
+            RolePermission.objects.filter(business_id=business_id, role_id=pk).values_list("permission_id", flat=True)
         )
 
         # ✅ Add "checked" key to each permission before serialization
@@ -56,22 +57,24 @@ def role_permissions(request, pk):
 
 @api_view(['POST'])
 def assign_permission_to_role(request, pk):
+    data = request.data
+    business_id = data.get("auth_business_id")
     try:
         data = []
-        permission_modules = request.data.get('role_permissions', [])
+        permission_modules = data.get('role_permissions', [])
 
         module_ids = []
         for permission_module in permission_modules:
             module_ids.append(permission_module["id"])
 
         permission_ids = Permission.objects.filter(module_id__in=module_ids).values_list("id")
-        RolePermission.objects.filter(role_id=pk, permission_id__in=permission_ids).delete()
+        RolePermission.objects.filter(business_id=business_id, role_id=pk, permission_id__in=permission_ids).delete()
 
         for permission_module in permission_modules:
             for permissions in permission_module.values():
                 for permission in permissions:
                     if isinstance(permission, dict) and permission.get('checked'):
-                        data.append({'role_id': pk, 'permission': permission.get('id')})
+                        data.append({'business_id': business_id, 'role_id': pk, 'permission': permission.get('id')})
 
         if data:
             serializer = RolePermissionSerializer(data=data, many=True)

@@ -8,8 +8,9 @@ class CustomPagination(PageNumberPagination):
 
     def paginate_queryset(self, queryset, request, view=None):
         # Retrieve page_size and page from query parameters
-        page_size_param = request.query_params.get(self.page_size_query_param)
-        page_param = request.query_params.get(self.page_query_param, 1)
+        request = request.data
+        page_size_param = request.get(self.page_size_query_param)
+        page_param = request.get(self.page_query_param, 1)
 
         # Check for exact 'all' case
         if page_size_param == 'all':
