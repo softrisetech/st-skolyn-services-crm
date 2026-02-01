@@ -1,6 +1,6 @@
 services:
   services_crm:
-    container_name: skoyln_services_crm
+    container_name: con_services_crm
     build:
       context: .
       dockerfile: Dockerfile
