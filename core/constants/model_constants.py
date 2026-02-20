@@ -19,4 +19,3 @@ BRANCH = 5
 OPEN = "open"
 WON = "won"
 LOST = "lost"
-REGISTRATION = "registration"
