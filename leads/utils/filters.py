@@ -2,21 +2,25 @@ from django.db.models import Q
 from datetime import datetime, time
 from core.utils.date_time_converter import DateTimeConverter
 
-def search_filter(queryset, filters):
+def lead_search_filter(queryset, filters):
     search_query = filters.get('search')
     if search_query:
         queryset = queryset.filter(
-            Q(name__icontains=search_query) |
-            Q(p_name__icontains=search_query) |
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query) |
+            Q(contact_number__icontains=search_query) |
             Q(email__icontains=search_query) |
-            Q(p_email__icontains=search_query) |
-            Q(p_contact_number__icontains=search_query)
+            Q(nic__icontains=search_query) |
+            Q(gender__icontains=search_query) |
+            Q(ethnicity__icontains=search_query) |
+            Q(remarks__icontains=search_query) |
+            Q(code__icontains=search_query)
         )
 
     return queryset
 
 def filter_by_branches(queryset, filters):
-    branches = filters.getlist('branches[]') or filters.get('branches')
+    branches = filters.get('branches')
     if branches:
         # Ensure branches is a list; if it's a single string, convert it into a list
         if isinstance(branches, str):
@@ -31,11 +35,11 @@ def filter_by_branches(queryset, filters):
     return queryset
 
 def filter_by_created_by(queryset, filters):
-    created_bys = filters.getlist('created_bys[]') or filters.get('created_bys')
+    created_bys = filters.get('created_bys')
     if created_bys:
         # Ensure created_bys is a list; if it's a single string, convert it into a list
         if isinstance(created_bys, str):
-            created_bys = [created_bys.strip()]  # Convert to a list after stripping spaces
+            created_bys = created_bys.split(',')  # Convert to a list after stripping spaces
         elif isinstance(created_bys, list):
             created_bys = [b.strip() for b in created_bys if b.strip()]  # Remove empty values
 
@@ -46,11 +50,11 @@ def filter_by_created_by(queryset, filters):
     return queryset
 
 def filter_by_assigned_to(queryset, filters):
-    assigned_tos = filters.getlist('assigned_tos[]') or filters.get('assigned_tos')
+    assigned_tos = filters.get('assigned_tos')
     if assigned_tos:
         # Ensure assigned_tos is a list; if it's a single string, convert it into a list
         if isinstance(assigned_tos, str):
-            assigned_tos = [assigned_tos.strip()]  # Convert to a list after stripping spaces
+            assigned_tos = assigned_tos.split(',')  # Convert to a list after stripping spaces
         elif isinstance(assigned_tos, list):
             assigned_tos = [b.strip() for b in assigned_tos if b.strip()]  # Remove empty values
 
@@ -60,12 +64,58 @@ def filter_by_assigned_to(queryset, filters):
 
     return queryset
 
+def filter_by_countries(queryset, filters):
+    countries = filters.get('countries')
+    if countries:
+        # Ensure countries is a list; if it's a single string, convert it into a list
+        if isinstance(countries, str):
+            countries = countries.split(',')  # Convert to a list after stripping spaces
+        elif isinstance(countries, list):
+            countries = [b.strip() for b in countries if b.strip()]  # Remove empty values
+
+        # Apply filter if the list is not empty
+        if countries:
+            queryset = queryset.filter(country_id__in=countries)
+
+    return queryset
+
+def filter_by_states(queryset, filters):
+    states = filters.get('states')
+    if states:
+        # Ensure states is a list; if it's a single string, convert it into a list
+        if isinstance(states, str):
+            states = states.split(',')  # Convert to a list after stripping spaces
+        elif isinstance(states, list):
+            states = [b.strip() for b in states if b.strip()]  # Remove empty values
+
+        # Apply filter if the list is not empty
+        if states:
+            queryset = queryset.filter(state_id__in=states)
+
+    return queryset
+
+
+def filter_by_cities(queryset, filters):
+    cities = filters.get('cities')
+    if cities:
+        # Ensure cities is a list; if it's a single string, convert it into a list
+        if isinstance(cities, str):
+            cities = cities.split(',')  # Convert to a list after stripping spaces
+        elif isinstance(cities, list):
+            cities = [b.strip() for b in cities if b.strip()]  # Remove empty values
+
+        # Apply filter if the list is not empty
+        if cities:
+            queryset = queryset.filter(city_id__in=cities)
+
+    return queryset
+
 def filter_by_mediums(queryset, filters):
-    mediums = filters.getlist('mediums[]') or filters.get('mediums')
+    mediums = filters.get('mediums')
     if mediums:
         # Ensure mediums is a list; if it's a single string, convert it into a list
         if isinstance(mediums, str):
-            mediums = [mediums.strip()]  # Convert to a list after stripping spaces
+            mediums = mediums.split(',')  # Convert to a list after stripping spaces
         elif isinstance(mediums, list):
             mediums = [b.strip() for b in mediums if b.strip()]  # Remove empty values
 
@@ -76,7 +126,7 @@ def filter_by_mediums(queryset, filters):
     return queryset
 
 def filter_by_sources(queryset, filters):
-    sources = filters.getlist('sources[]') or filters.get('sources')
+    sources = filters.get('sources')
     if sources:
         # Ensure sources is a list; if it's a single string, convert it into a list
         if isinstance(sources, str):
@@ -91,7 +141,7 @@ def filter_by_sources(queryset, filters):
     return queryset
 
 def filter_by_stages(queryset, filters):
-    stages = filters.getlist('stages[]') or filters.get('stages')
+    stages = filters.get('stages')
     if stages:
         # Ensure stages is a list; if it's a single string, convert it into a list
         if isinstance(stages, str):
@@ -106,7 +156,7 @@ def filter_by_stages(queryset, filters):
     return queryset
 
 def filter_by_tags(queryset, filters):
-    tags = filters.getlist('tags[]') or filters.get('tags')
+    tags = filters.get('tags')
     if tags:
         # Ensure tags is a list; if it's a single string, convert it into a list
         if isinstance(tags, str):
@@ -117,6 +167,36 @@ def filter_by_tags(queryset, filters):
         # Apply filter if the list is not empty
         if tags:
             queryset = queryset.filter(tag__in=tags)
+
+    return queryset
+
+def filter_by_teams(queryset, filters):
+    teams = filters.get('teams')
+    if teams:
+        # Ensure teams is a list; if it's a single string, convert it into a list
+        if isinstance(teams, str):
+            teams = teams.split(',')  # Convert to a list after stripping spaces
+        elif isinstance(teams, list):
+            teams = [b.strip() for b in teams if b.strip()]  # Remove empty values
+
+        # Apply filter if the list is not empty
+        if teams:
+            queryset = queryset.filter(team__in=teams)
+
+    return queryset
+
+def filter_by_campaigns(queryset, filters):
+    campaigns = filters.get('campaigns')
+    if campaigns:
+        # Ensure campaigns is a list; if it's a single string, convert it into a list
+        if isinstance(campaigns, str):
+            campaigns = campaigns.split(',')  # Convert to a list after stripping spaces
+        elif isinstance(campaigns, list):
+            campaigns = [b.strip() for b in campaigns if b.strip()]  # Remove empty values
+
+        # Apply filter if the list is not empty
+        if campaigns:
+            queryset = queryset.filter(campaign__in=campaigns)
 
     return queryset
 
@@ -150,7 +230,7 @@ def filter_by_converted(queryset, filters):
     return queryset
 
 def filter_by_sessions(queryset, filters):
-    sessions = filters.getlist('sessions[]') or filters.get('sessions')
+    sessions = filters.get('sessions')
     if sessions:
         # Ensure sessions is a list; if it's a single string, convert it into a list
         if isinstance(sessions, str):
@@ -248,5 +328,24 @@ def filter_by_model_type(queryset, filters):
     model_type = filters.get('model_type')
     if model_type:
         queryset = queryset.filter(model_type=model_type)
+
+    return queryset
+
+
+def filter_by_sort_order(queryset, filters):
+    sort_by = filters.get('sort_by')  # Default sort field
+    sort_order = filters.get('sort_order')
+
+    if sort_by:
+        if sort_order == 'desc':
+            sort_by = f'-{sort_by}'
+        queryset = queryset.order_by(sort_by)
+
+    return queryset
+
+def filter_by_integrate_with_google_calendar(queryset, filters):
+    integrate_with_google_calendar = filters.get('integrate_with_google_calendar')
+    if integrate_with_google_calendar:
+        queryset = queryset.filter(integrate_with_google_calendar=integrate_with_google_calendar)
 
     return queryset

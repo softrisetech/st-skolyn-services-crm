@@ -71,6 +71,92 @@ class Tag(BaseBusinessModel):
             )
         ]
 
+class StageReason(BaseBusinessModel):
+    stage = models.ForeignKey('Stage', on_delete=models.CASCADE, db_index=True)
+    name = models.CharField(max_length=CHAR_LENGTH, db_index=True)
+    slug = AutoSlugField(populate_from='name', unique=True, blank=True, null=True, unique_with=['business_id'], always_update=True)
+    description = models.TextField(max_length=LONG_CHAR_LENGTH, blank=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['-updated_at']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['slug', 'business_id'],
+                condition=models.Q(deleted_at__isnull=True),  # only enforce for active rows
+                name='unique_slug_per_business_stage_reason'
+            )
+        ]
+
+
+class Campaign(BaseBusinessModel):
+    name = models.CharField(max_length=CHAR_LENGTH)
+    slug = AutoSlugField(populate_from='name', unique=True, blank=True, null=True, unique_with=['business_id'], always_update=True)
+    description = models.TextField(max_length=LONG_CHAR_LENGTH, blank=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['-updated_at']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['slug', 'business_id'],
+                condition=models.Q(deleted_at__isnull=True),  # only enforce for active rows
+                name='unique_slug_per_business_campaign'
+             )
+         ]
+
+
+class FollowUpType(BaseBusinessModel):
+    name = models.CharField(max_length=CHAR_LENGTH)
+    slug = AutoSlugField(populate_from='name', unique=True, blank=True, null=True, unique_with=['business_id'], always_update=True)
+    description = models.TextField(max_length=LONG_CHAR_LENGTH, blank=True)
+    is_active = models.BooleanField(default=True)
+    integrate_with_google_calendar = models.BooleanField(default=False)
+
+    class Meta:
+        ordering = ['-updated_at']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['slug', 'business_id'],
+                condition=models.Q(deleted_at__isnull=True),  # only enforce for active rows
+                name='unique_slug_per_business_followup_type'
+            )
+        ]
+
+
+class Team(BaseBusinessModel):
+    user_id = models.UUIDField(db_index=True)
+    name = models.CharField(max_length=CHAR_LENGTH)
+    description = models.TextField(max_length=LONG_CHAR_LENGTH, blank=True)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['-updated_at']
+
+
+class TeamMember(BaseBusinessModel):
+    team = models.ForeignKey('Team', on_delete=models.CASCADE, db_index=True, related_name='members')
+    user_id = models.UUIDField(db_index=True)
+
+    class Meta:
+        ordering = ['-updated_at']
+        unique_together = ('team', 'user_id')
+
+
+class Contact(BaseBusinessModel):
+    father_first_name = models.CharField(max_length=CHAR_LENGTH, null=True, blank=True)
+    father_last_name = models.CharField(max_length=CHAR_LENGTH, null=True, blank=True)
+    father_contact_number = models.CharField(max_length=PHONE_LENGTH, null=True, blank=True)
+    father_email = models.EmailField(max_length=EMAIL_LENGTH, null=True, blank=True)
+    father_nic = models.CharField(max_length=CHAR_LENGTH, null=True, blank=True)
+    mother_first_name = models.CharField(max_length=CHAR_LENGTH, null=True, blank=True)
+    mother_last_name = models.CharField(max_length=CHAR_LENGTH, null=True, blank=True)
+    mother_contact_number = models.CharField(max_length=PHONE_LENGTH, null=True, blank=True)
+    mother_email = models.EmailField(max_length=EMAIL_LENGTH, null=True, blank=True)
+    mother_nic = models.CharField(max_length=CHAR_LENGTH, null=True, blank=True)
+    is_father_applicable = models.BooleanField(default=True)
+    is_mother_applicable = models.BooleanField(default=True)
+
 
 class Lead(BaseBusinessModel):
     branch_id = models.UUIDField(db_index=True)
@@ -79,20 +165,25 @@ class Lead(BaseBusinessModel):
     source = models.ForeignKey('Source', on_delete=models.CASCADE, null=True, blank=True, db_index=True)
     tag = models.ForeignKey('Tag', on_delete=models.CASCADE, null=True, blank=True, db_index=True)
     stage = models.ForeignKey('Stage', on_delete=models.CASCADE, db_index=True)
+    team = models.ForeignKey('Team', on_delete=models.CASCADE, null=True, blank=True, db_index=True)
+    contact = models.OneToOneField('Contact', on_delete=models.CASCADE)
+    campaign = models.ForeignKey('Campaign', on_delete=models.CASCADE, null=True, blank=True, db_index=True)
+    code = models.CharField(max_length=CHAR_LENGTH)
     created_by = models.UUIDField(db_index=True)
     assigned_to = models.UUIDField(null=True, blank=True, db_index=True)
-    first_name = models.CharField(max_length=CHAR_LENGTH)
+    country_id = models.UUIDField(null=True, blank=True, db_index=True)
+    state_id = models.UUIDField(null=True, blank=True, db_index=True)
+    city_id = models.UUIDField(null=True, blank=True, db_index=True)
+    first_name = models.CharField(max_length=CHAR_LENGTH, null=True, blank=True)
     last_name = models.CharField(max_length=CHAR_LENGTH, null=True, blank=True)
-    priority = models.PositiveSmallIntegerField()
+    priority = models.PositiveSmallIntegerField(default=1)
     date_of_birth = models.DateField(null=True, blank=True)
     contact_number = models.CharField(max_length=PHONE_LENGTH, null=True, blank=True)
     email = models.EmailField(max_length=EMAIL_LENGTH, null=True, blank=True)
-    location = models.CharField(max_length=CHAR_LENGTH, null=True, blank=True)
-    previous_education = models.CharField(max_length=CHAR_LENGTH, null=True, blank=True)
-    p_name = models.CharField(max_length=CHAR_LENGTH, null=True, blank=True)
-    p_contact_number = models.CharField(max_length=PHONE_LENGTH, null=True, blank=True)
-    p_email = models.EmailField(max_length=EMAIL_LENGTH, null=True, blank=True)
-    registration_no = models.CharField(max_length=CHAR_LENGTH, null=True, blank=True)
+    nic = models.CharField(max_length=CHAR_LENGTH, null=True, blank=True)
+    gender = models.CharField(max_length=CHAR_LENGTH, null=True, blank=True)
+    ethnicity = models.CharField(max_length=CHAR_LENGTH, null=True, blank=True)
+    remarks = models.TextField(max_length=LONG_TEXT_LENGTH, null=True, blank=True)
     is_imported = models.BooleanField(default=False)
     imported_at = models.DateTimeField(null=True, blank=True)
 
@@ -129,59 +220,22 @@ class Lead(BaseBusinessModel):
             return None
 
     def get_attachments(self):
-        attachments = Attachment.objects.filter(lead_id=self.id).values("id", "path")
+        attachments = Attachment.objects.filter(lead_id=self.id).values("id", "file")
 
         # Convert UUIDs to strings
         formatted_attachments = [
-            {"id": str(attachment["id"]), "path": attachment["path"]} for attachment in attachments
+            {"id": str(attachment["id"]), "file": attachment["file"]} for attachment in attachments
         ]
 
         return formatted_attachments if formatted_attachments else None
+    
 
-    def get_registration(self):
-        try:
-            registration = Registration.objects.filter(lead=self.id).values("id", "date", "amount").first()
-            return registration
-        except Registration.DoesNotExist:
-            return None
-
-class FollowUpType(BaseBusinessModel):
-    name = models.CharField(max_length=CHAR_LENGTH)
-    slug = AutoSlugField(populate_from='name', unique=True, blank=True, null=True, unique_with=['business_id'], always_update=True)
-    description = models.TextField(max_length=LONG_CHAR_LENGTH, blank=True)
-    is_active = models.BooleanField(default=True)
-
-    class Meta:
-        ordering = ['-updated_at']
-        constraints = [
-            models.UniqueConstraint(
-                fields=['slug', 'business_id'],
-                condition=models.Q(deleted_at__isnull=True),  # only enforce for active rows
-                name='unique_slug_per_business_followup_type'
-            )
-        ]
-
-class FollowUp(BaseBusinessModel):
-    lead = models.ForeignKey('Lead', on_delete=models.CASCADE, db_index=True)
-    type_id = models.ForeignKey('FollowUpType', on_delete=models.CASCADE, db_index=True)
-    follow_up_by = models.UUIDField(db_index=True)
-    date = models.DateField()
-    description = models.TextField(max_length=LONG_CHAR_LENGTH)
-
-    class Meta:
-        ordering = ['-updated_at']
-
-    def get_follow_up_type(self):
-        return self.type_id if self.type_id else None
 
 class Tracking(BaseBusinessModel):
     lead = models.ForeignKey('Lead', on_delete=models.CASCADE, db_index=True)
     model_id = models.UUIDField()
-    model_type = models.PositiveSmallIntegerField()
-    user_id = models.UUIDField()
-
-    class Meta:
-        ordering = ['-updated_at']
+    model_type = models.CharField(max_length=CHAR_LENGTH)
+    user_id = models.UUIDField(db_index=True)
 
     def get_medium(self):
         try:
@@ -211,39 +265,46 @@ class Tracking(BaseBusinessModel):
         except Tag.DoesNotExist:
             return None
 
-class Attachment(BaseBusinessModel):
-    lead = models.ForeignKey('Lead', on_delete=models.CASCADE, db_index=True)
-    path = models.TextField(max_length=LONG_CHAR_LENGTH)
 
-class LostReason(BaseBusinessModel):
-    name = models.CharField(max_length=CHAR_LENGTH)
-    slug = AutoSlugField(populate_from='name', unique=True, blank=True, null=True, unique_with=['business_id'], always_update=True)
-    description = models.TextField(max_length=LONG_CHAR_LENGTH, blank=True)
-    is_active = models.BooleanField(default=True)
+class FollowUp(BaseBusinessModel):
+    lead = models.ForeignKey('Lead', on_delete=models.CASCADE, db_index=True)
+    follow_up_type = models.ForeignKey('FollowUpType', on_delete=models.CASCADE, db_index=True, null=True, blank=True)
+    created_by = models.UUIDField(db_index=True)
+    date_time = models.DateTimeField()
+    description = models.TextField(max_length=LONG_CHAR_LENGTH, null=True, blank=True)
 
     class Meta:
         ordering = ['-updated_at']
-        constraints = [
-            models.UniqueConstraint(
-                fields=['slug', 'business_id'],
-                condition=models.Q(deleted_at__isnull=True),  # only enforce for active rows
-                name='unique_slug_per_business_lost_reason'
-            )
-        ]
 
-class StageReason(BaseBusinessModel):
+
+class StageReasonEntry(BaseBusinessModel):
     lead = models.ForeignKey('Lead', on_delete=models.CASCADE, db_index=True)
     stage = models.ForeignKey('Stage', on_delete=models.CASCADE, db_index=True)
-    reason_type = models.ForeignKey('LostReason', on_delete=models.CASCADE, db_index=True)
-    reason = models.TextField(max_length=LONG_CHAR_LENGTH)
+    stage_reason = models.ForeignKey('StageReason', on_delete=models.CASCADE, db_index=True)
+    remarks = models.TextField(max_length=LONG_CHAR_LENGTH, null=True, blank=True)
+    created_by = models.UUIDField(db_index=True)
 
     class Meta:
         ordering = ['-updated_at']
 
-class Registration(BaseBusinessModel):
+
+class Attachment(BaseBusinessModel):
     lead = models.ForeignKey('Lead', on_delete=models.CASCADE, db_index=True)
-    date = models.DateField()
-    amount = models.DecimalField(max_digits=DECIMAL_LENGTH, decimal_places=DECIMAL_PLACES_LENGTH)
+    file = models.JSONField(max_length=LONG_CHAR_LENGTH)
 
-    class Meta:
-        ordering = ['-updated_at']
+
+class PreRequisite(BaseBusinessModel):
+    institution_name = models.CharField(max_length=CHAR_LENGTH, null=True, blank=True)
+    board_name = models.CharField(max_length=CHAR_LENGTH, null=True, blank=True)
+    code = models.CharField(max_length=CHAR_LENGTH, null=True, blank=True)
+    program = models.CharField(max_length=CHAR_LENGTH, null=True, blank=True)
+    
+
+class PreRequisiteCourse(BaseBusinessModel):
+    prerequisite = models.ForeignKey('PreRequisite', on_delete=models.CASCADE, db_index=True)
+    lead = models.ForeignKey('Lead', on_delete=models.CASCADE, db_index=True)
+    course_name = models.CharField(max_length=CHAR_LENGTH, null=True, blank=True)
+    max_marks = models.IntegerField()
+    passing_marks = models.IntegerField()
+    marks_in_percentage = models.BooleanField()
+    is_mandatory = models.BooleanField()

@@ -1,4 +1,5 @@
 import json
+from ..models import Stage
 from core.utils.notification_utils import notification_obj
 
 def handle_email_trigger(request, lead, notifications):
@@ -22,3 +23,10 @@ def handle_email_trigger(request, lead, notifications):
                 'parent_name': lead.p_name
             }
         ))
+
+
+def get_default_lead_stage(business_id):
+    return Stage.objects.filter(business_id=business_id, is_default=True, is_active=True, type="open").first()
+
+def get_default_lead_stage_by_priority(business_id):
+    return Stage.objects.filter(business_id=business_id, is_active=True, type="open").order_by('priority').first()

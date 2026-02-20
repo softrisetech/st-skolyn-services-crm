@@ -1,63 +1,73 @@
 from rest_framework import serializers
 from core.constants.model_constants import STAGE, BRANCH, MEDIUM, TAG, SOURCE
-from .models import Lead, FollowUp, LostReason, Medium, Source, Stage, Tag, Tracking, FollowUpType
+from .models import Lead, FollowUp, Medium, Source, Stage, StageReason, Tag, Campaign, Tracking, FollowUpType, Team, TeamMember, Contact
 
 NAME_ALREADY_EXISTS = "The name already exists"
 
-class LeadSerializer(serializers.ModelSerializer):
-    medium_name = serializers.SerializerMethodField()
-    source_name = serializers.SerializerMethodField()
-    stage_name = serializers.SerializerMethodField()
-    tag_name = serializers.SerializerMethodField()
-    attachments = serializers.SerializerMethodField()
-    registration = serializers.SerializerMethodField()
+
+class ContactSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Contact
+        fields = [
+            "id", "father_first_name", "father_last_name", "father_contact_number", "father_email", "father_nic", "is_father_applicable",
+            "mother_first_name", "mother_last_name", "mother_contact_number", "mother_email", "mother_nic", "is_mother_applicable"
+        ]
+
+
+class LeadListSerializer(serializers.ModelSerializer):
+    medium_name = serializers.CharField(source="medium.name", read_only=True)
+    source_name = serializers.CharField(source="source.name", read_only=True)
+    stage_name = serializers.CharField(source="stage.name", read_only=True)
+    tag_name = serializers.CharField(source="tag.name", read_only=True)
+    team_name = serializers.CharField(source="team.name", read_only=True)
+    campaign_name = serializers.CharField(source="campaign.name", read_only=True)
     class Meta:
         model = Lead
-        fields = ['id', 'business_id', 'branch_id', 'medium', 'medium_name', 'source', 'source_name', 'stage',
-                  'stage_name', 'tag', 'tag_name', 'session_id', 'created_by', 'assigned_to', 'priority', 'first_name', 'last_name',
-                  'contact_number', 'email', 'location', 'previous_education', 'date_of_birth', 'p_name',
-                  'p_contact_number', 'p_email', 'attachments', 'registration', 'registration_no', 'created_at', 'updated_at',
-                  'is_imported', 'imported_at']
+        fields = [
+                    "id", "business_id", "branch_id", "session_id", "medium", "medium_name", "source", "source_name", "stage", "stage_name", "tag", "tag_name", "team", "team_name", "campaign", "campaign_name", "contact", "code", "created_by", "assigned_to", "country_id",
+                    "state_id", "city_id", "first_name", "last_name", "priority", "date_of_birth", "contact_number",
+                    "email", "nic", "gender", "ethnicity", "remarks", "is_imported", "imported_at", "created_at", "updated_at"
+                ]
+        
+class LeadStoreSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Lead
+        fields = [
+                    "id", "business_id", "branch_id", "session_id", "medium", "source", "stage", "tag", "team", "campaign", "contact", "code", "created_by", "assigned_to", "country_id",
+                    "state_id", "city_id", "first_name", "last_name", "priority", "date_of_birth", "contact_number",
+                    "email", "nic", "gender", "ethnicity", "remarks", "is_imported", "imported_at", "created_at", "updated_at"
+                ]
 
-    def get_medium_name(self, obj):
-        medium = obj.get_medium()
-        return medium.name if medium else None
+    # def get_medium_name(self, obj):
+    #     medium = obj.get_medium()
+    #     return medium.name if medium else None
 
-    def get_source_name(self, obj):
-        source = obj.get_source()
-        return source.name if source else None
+    # def get_source_name(self, obj):
+    #     source = obj.get_source()
+    #     return source.name if source else None
 
-    def get_stage_name(self, obj):
-        stage = obj.get_stage()
-        return stage.name if stage else None
+    # def get_stage_name(self, obj):
+    #     stage = obj.get_stage()
+    #     return stage.name if stage else None
 
-    def get_tag_name(self, obj):
-        tag = obj.get_tag()
-        return tag.name if tag else None
+    # def get_tag_name(self, obj):
+    #     tag = obj.get_tag()
+    #     return tag.name if tag else None
 
-    def get_attachments(self, obj):
-        attachments = obj.get_attachments()
-        return attachments if attachments else []
-
-    def get_registration(self, obj):
-        registration = obj.get_registration()
-        return registration if registration else {}
+    # def get_attachments(self, obj):
+    #     attachments = obj.get_attachments()
+    #     return attachments if attachments else []
 
 
 class StageLeadSerializer(serializers.ModelSerializer):
     source_name = serializers.SerializerMethodField()
-    registration = serializers.SerializerMethodField()
     class Meta:
         model = Lead
-        fields = ['id', 'business_id', 'source_name', 'name', 'previous_education', 'priority', 'session_id', 'branch_id', 'assigned_to', 'registration']
+        fields = ['id', 'business_id', 'source_name', 'name', 'previous_education', 'priority', 'session_id', 'branch_id', 'assigned_to']
 
     def get_source_name(self, obj):
         source = obj.get_source()
         return source.name if source else None
-
-    def get_registration(self, obj):
-        registration = obj.get_registration()
-        return registration if registration else {}
 
 
 class FollowUpSerializer(serializers.ModelSerializer):
@@ -102,7 +112,6 @@ class SourceSerializer(serializers.ModelSerializer):
         errors = {}
         name = data.get('name')
         business_id = data.get('business_id')
-        medium = data.get('medium')
 
         if self.instance:
             if Source.objects.filter(name=name, business_id=business_id).exclude(id=self.instance.id).exists():
@@ -125,13 +134,35 @@ class StageSerializer(serializers.ModelSerializer):
         errors = {}
         name = data.get('name')
         business_id = data.get('business_id')
-        type = data.get('type')
 
         if self.instance:
             if Stage.objects.filter(name=name, business_id=business_id).exclude(id=self.instance.id).exists():
                 errors["name"] = [NAME_ALREADY_EXISTS]
         else:
             if Stage.objects.filter(name=name, business_id=business_id).exists():
+                errors["name"] = [NAME_ALREADY_EXISTS]
+
+        if errors:
+            raise serializers.ValidationError(errors)
+
+        return data
+    
+class StageReasonSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = StageReason
+        fields = ['id', 'business_id', 'stage', 'name', 'slug', 'description', 'is_active', 'created_at', 'updated_at']
+
+    def validate(self, data):
+        errors = {}
+        name = data.get('name')
+        stage = data.get('stage')
+        business_id = data.get('business_id')
+
+        if self.instance:
+            if StageReason.objects.filter(name=name, stage=stage, business_id=business_id).exclude(id=self.instance.id).exists():
+                errors["name"] = [NAME_ALREADY_EXISTS]
+        else:
+            if StageReason.objects.filter(name=name, stage=stage, business_id=business_id).exists():
                 errors["name"] = [NAME_ALREADY_EXISTS]
 
         if errors:
@@ -160,6 +191,31 @@ class TagSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(errors)
 
         return data
+    
+
+
+class CampaignSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Campaign
+        fields = ['id', 'business_id', 'name', 'slug', 'description', 'is_active', 'created_at', 'updated_at']
+
+    def validate(self, data):
+        errors = {}
+        name = data.get('name')
+        business_id = data.get('business_id')
+
+        if self.instance:
+            if Campaign.objects.filter(name=name, business_id=business_id).exclude(id=self.instance.id).exists():
+                errors["name"] = [NAME_ALREADY_EXISTS]
+        else:
+            if Campaign.objects.filter(name=name, business_id=business_id).exists():
+                errors["name"] = [NAME_ALREADY_EXISTS]
+
+        if errors:
+            raise serializers.ValidationError(errors)
+
+        return data
+    
     
 class TrackingSerializer(serializers.ModelSerializer):
     created_at = serializers.DateTimeField(format='%Y-%m-%d %H:%M:%S', read_only=True)
@@ -212,7 +268,7 @@ class LeadImportSerializer(serializers.ModelSerializer):
 class FollowUpTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = FollowUpType
-        fields = ('id', 'business_id', 'name', 'is_active', 'created_at', 'updated_at')
+        fields = ('id', 'business_id', 'name', 'slug', 'is_active', 'description', 'integrate_with_google_calendar', 'created_at', 'updated_at')
 
     def validate(self, data):
         errors = {}
@@ -231,10 +287,17 @@ class FollowUpTypeSerializer(serializers.ModelSerializer):
 
         return data
 
-class LostReasonSerializer(serializers.ModelSerializer):
+class TeamMemberSerializer(serializers.ModelSerializer):
     class Meta:
-        model = LostReason
-        fields = ('id', 'business_id', 'name', 'is_active', 'created_at', 'updated_at')
+        model = TeamMember
+        fields = ['user_id']
+
+
+class TeamSerializer(serializers.ModelSerializer):
+    members = serializers.SerializerMethodField()
+    class Meta:
+        model = Team
+        fields = ('id', 'business_id', 'user_id', 'name', 'description', 'is_active', 'members', 'created_at', 'updated_at')
 
     def validate(self, data):
         errors = {}
@@ -242,16 +305,21 @@ class LostReasonSerializer(serializers.ModelSerializer):
         business_id = data.get('business_id')
 
         if self.instance:
-            if LostReason.objects.filter(name=name,business_id=business_id).exclude(id=self.instance.id).exists():
+            if Team.objects.filter(name=name,business_id=business_id).exclude(id=self.instance.id).exists():
                 errors["name"] = [NAME_ALREADY_EXISTS]
         else:
-            if LostReason.objects.filter(name=name,business_id=business_id).exists():
+            if Team.objects.filter(name=name,business_id=business_id).exists():
                 errors["name"] = [NAME_ALREADY_EXISTS]
 
         if errors:
             raise serializers.ValidationError(errors)
 
         return data
+    
+    def get_members(self, obj):
+        return list(
+            obj.members.values_list('user_id', flat=True)
+        )
 
 
 class LeadExportSerializer(serializers.ModelSerializer):
