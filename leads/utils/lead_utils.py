@@ -1,6 +1,10 @@
 import json
 from ..models import Stage
 from core.utils.notification_utils import notification_obj
+import random
+import string
+from datetime import datetime
+from django.db import IntegrityError
 
 def handle_email_trigger(request, lead, notifications):
     if lead.p_email is not None:
@@ -30,3 +34,15 @@ def get_default_lead_stage(business_id):
 
 def get_default_lead_stage_by_priority(business_id):
     return Stage.objects.filter(business_id=business_id, is_active=True, type="open").order_by('priority').first()
+
+
+def generate_unique_code(model, prefix="LD"):
+    for _ in range(5):  # retry limit
+        date_part = datetime.now().strftime("%y%m%d")
+        random_part = ''.join(random.choices(string.ascii_uppercase + string.digits, k=5))
+        code = f"{prefix}-{date_part}-{random_part}"
+
+        if not model.objects.filter(code=code).exists():
+            return code
+
+    raise Exception("Unable to generate unique lead code")

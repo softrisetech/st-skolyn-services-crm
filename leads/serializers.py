@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from core.constants.model_constants import STAGE, BRANCH, MEDIUM, TAG, SOURCE
-from .models import Lead, FollowUp, Medium, Source, Stage, StageReason, Tag, Campaign, Tracking, FollowUpType, Team, TeamMember, Contact
+from .models import Attachment, Lead, FollowUp, Medium, Source, Stage, StageReason, Tag, Campaign, Tracking, FollowUpType, Team, TeamMember, Contact
 
 NAME_ALREADY_EXISTS = "The name already exists"
 
@@ -13,6 +13,10 @@ class ContactSerializer(serializers.ModelSerializer):
             "mother_first_name", "mother_last_name", "mother_contact_number", "mother_email", "mother_nic", "is_mother_applicable"
         ]
 
+class AttachmentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Attachment
+        fields = ['id', 'business_id', 'lead', 'file']
 
 class LeadListSerializer(serializers.ModelSerializer):
     medium_name = serializers.CharField(source="medium.name", read_only=True)
@@ -21,6 +25,7 @@ class LeadListSerializer(serializers.ModelSerializer):
     tag_name = serializers.CharField(source="tag.name", read_only=True)
     team_name = serializers.CharField(source="team.name", read_only=True)
     campaign_name = serializers.CharField(source="campaign.name", read_only=True)
+    contact = ContactSerializer(read_only=True)
     class Meta:
         model = Lead
         fields = [
@@ -28,6 +33,27 @@ class LeadListSerializer(serializers.ModelSerializer):
                     "state_id", "city_id", "first_name", "last_name", "priority", "date_of_birth", "contact_number",
                     "email", "nic", "gender", "ethnicity", "remarks", "is_imported", "imported_at", "created_at", "updated_at"
                 ]
+        
+class LeadGetSerializer(serializers.ModelSerializer):
+    medium_name = serializers.CharField(source="medium.name", read_only=True)
+    source_name = serializers.CharField(source="source.name", read_only=True)
+    stage_name = serializers.CharField(source="stage.name", read_only=True)
+    tag_name = serializers.CharField(source="tag.name", read_only=True)
+    team_name = serializers.CharField(source="team.name", read_only=True)
+    campaign_name = serializers.CharField(source="campaign.name", read_only=True)
+    contact = ContactSerializer(read_only=True)
+    attachments = serializers.SerializerMethodField()
+    class Meta:
+        model = Lead
+        fields = [
+                    "id", "business_id", "branch_id", "session_id", "medium", "medium_name", "source", "source_name", "stage", "stage_name", "tag", "tag_name", "team", "team_name", "campaign", "campaign_name", "contact", "code", "created_by", "assigned_to", "country_id",
+                    "state_id", "city_id", "first_name", "last_name", "priority", "date_of_birth", "contact_number",
+                    "email", "nic", "gender", "ethnicity", "remarks", "is_imported", "imported_at", "created_at", "updated_at", "attachments"
+                ]
+        
+    def get_attachments(self, obj):
+        attachments = obj.get_attachments()
+        return attachments if attachments else []
         
 class LeadStoreSerializer(serializers.ModelSerializer):
     class Meta:
@@ -37,6 +63,8 @@ class LeadStoreSerializer(serializers.ModelSerializer):
                     "state_id", "city_id", "first_name", "last_name", "priority", "date_of_birth", "contact_number",
                     "email", "nic", "gender", "ethnicity", "remarks", "is_imported", "imported_at", "created_at", "updated_at"
                 ]
+
+
 
     # def get_medium_name(self, obj):
     #     medium = obj.get_medium()
