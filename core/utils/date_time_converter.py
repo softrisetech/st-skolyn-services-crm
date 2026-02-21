@@ -1,6 +1,7 @@
 from datetime import datetime
 import pytz
 from dateutil import parser
+from datetime import time
 
 class DateTimeConverter:
     @staticmethod
@@ -55,3 +56,19 @@ class DateTimeConverter:
         utc_dt = datetime.strptime(full_datetime_str, '%Y-%m-%d %H:%M:%S').replace(tzinfo=pytz.utc)
         target_dt = utc_dt.astimezone(pytz.timezone(to_zone))
         return target_dt.strftime(time_format)
+
+    @staticmethod
+    def to_utc_range(date_str, from_zone, is_end=False):
+        local_tz = pytz.timezone(from_zone)
+
+        dt = datetime.strptime(date_str, "%Y-%m-%d")
+
+        if is_end:
+            dt = datetime.combine(dt, time.max)
+        else:
+            dt = datetime.combine(dt, time.min)
+
+        localized_dt = local_tz.localize(dt)
+        utc_dt = localized_dt.astimezone(pytz.utc)
+
+        return utc_dt

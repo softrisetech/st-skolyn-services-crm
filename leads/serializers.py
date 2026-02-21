@@ -99,15 +99,11 @@ class StageLeadSerializer(serializers.ModelSerializer):
 
 
 class FollowUpSerializer(serializers.ModelSerializer):
-    date = serializers.DateField(format='%Y-%m-%d')
-    type_name = serializers.SerializerMethodField()
+    date_time = serializers.DateTimeField(format='%Y-%m-%d %H:%M:%S')
+    follow_type_name = serializers.CharField(source="follow_up_type.name", read_only=True)
     class Meta:
         model = FollowUp
-        fields = ["id", "business_id", "lead_id", "type_id", "type_name", "follow_up_by", "date", "description", "created_at", "updated_at"]
-
-    def get_type_name(self, obj):
-        follow_up_type = obj.get_follow_up_type()
-        return follow_up_type.name if follow_up_type else None
+        fields = ["id", "business_id", "lead", "follow_up_type", "follow_type_name", "created_by", "date_time", "description", "is_done", "created_at", "updated_at"]
 
 class MediumSerializer(serializers.ModelSerializer):
     class Meta:

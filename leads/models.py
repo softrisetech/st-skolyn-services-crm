@@ -272,10 +272,11 @@ class Tracking(BaseBusinessModel):
 
 class FollowUp(BaseBusinessModel):
     lead = models.ForeignKey('Lead', on_delete=models.CASCADE, db_index=True)
-    follow_up_type = models.ForeignKey('FollowUpType', on_delete=models.CASCADE, db_index=True, null=True, blank=True)
+    follow_up_type = models.ForeignKey('FollowUpType', on_delete=models.CASCADE, db_index=True, null=True, blank=True, related_name='follow_up_type')
     created_by = models.UUIDField(db_index=True)
     date_time = models.DateTimeField()
     description = models.TextField(max_length=LONG_CHAR_LENGTH, null=True, blank=True)
+    is_done = models.BooleanField(default=False)
 
     class Meta:
         ordering = ['-updated_at']

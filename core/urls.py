@@ -4,7 +4,7 @@ from rest_framework.decorators import api_view
 from .utils.response_utils import success_response
 
 
-@api_view(['GET'])
+@api_view(['POST'])
 def health_check(request):
     return success_response("health_ok", status.HTTP_200_OK)
 

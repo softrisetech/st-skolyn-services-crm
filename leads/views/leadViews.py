@@ -18,7 +18,7 @@ from core.utils.notification_utils import notification, notification_obj
 from core.constants.model_constants import STAGE, MEDIUM, SOURCE, TAG, BRANCH, SESSION, ASSIGNED_TO, TEAM, CAMPAIGN
 from ..serializers import LeadListSerializer, LeadStoreSerializer, LeadGetSerializer, StageLeadSerializer, LeadImportSerializer, ContactSerializer
 from access_control.utils.permission_helpers import view_branch_wise, view_modify_all
-from ..models import Lead, Stage, Source, Medium, Attachment, Tracking, Tag, StageReason, Team, Campaign, FollowUp
+from ..models import Lead, Stage, Source, Medium, Attachment, Tracking, Tag, StageReason, Team, Campaign, StageReasonEntry
 from core.utils.model_helpers import lead_default_stage, tracking_object, verify_lead_missing_fields
 from access_control.utils.permission_constants import LEAD_VIEW_ALL, LEAD_BRANCH_WISE, LEAD_MODIFY_ALL
 from leads.utils.filters import filter_by_sort_order, filter_by_campaigns, filter_by_teams, filter_by_priority, filter_by_countries, filter_by_states, filter_by_cities, lead_search_filter, filter_by_date_range, filter_by_branches, filter_by_created_by, filter_by_assigned_to, filter_by_mediums, filter_by_generated, filter_by_sessions, filter_by_sources, filter_by_stages, filter_by_tags
@@ -213,6 +213,83 @@ def delete_lead(request, pk):
     lead.delete()
     return success_response('record_deleted', status.HTTP_200_OK)
 
+
+@api_view(['POST'])
+@access_control_middleware
+def change_stage(request, pk):
+    data = request.data
+    business_id = data.get('auth_business_id')
+    auth_id = data.get('auth_id')
+    role_id = data.get('auth_role_id')
+    is_staff = check_if_user_is_staff(data)
+
+    queryset = __queryset(business_id)
+    lead = queryset.filter(id=pk).first()
+    if not lead:
+        return error_response('lead_not_found', status.HTTP_404_NOT_FOUND)
+
+    # Permission check
+    if is_staff == "true":
+        if str(lead.created_by) != str(auth_id) and not view_modify_all(auth_id, role_id, LEAD_MODIFY_ALL):
+            return error_response('permission_denied', status.HTTP_403_FORBIDDEN)
+
+    stage_id = data.get('stage_id')
+
+    stage = Stage.objects.filter(id=stage_id, business_id=business_id).first()
+    if not stage:
+        return error_response('stage_not_found', status.HTTP_404_NOT_FOUND)
+
+    if lead.stage_id == stage.id:
+        return error_response('lead_already_on_same_stage', status.HTTP_422_UNPROCESSABLE_ENTITY)
+
+    # Check if stage requires reason
+    stage_reason = None
+    if StageReason.objects.filter(stage_id=stage.id, business_id=business_id).exists():
+        reason_id = data.get('reason_id')
+        stage_reason = StageReason.objects.filter(id=reason_id, stage_id=stage.id, business_id=business_id).first()
+        if not stage_reason:
+            return error_response('stage_reason_not_found', status.HTTP_404_NOT_FOUND)
+
+    old_lead_data = copy.deepcopy(lead)
+
+    try:
+        with transaction.atomic():
+
+            # Create stage reason entry if required
+            if stage_reason:
+                StageReasonEntry.objects.create(
+                    lead_id=lead.id,
+                    stage_id=stage.id,
+                    stage_reason_id=stage_reason.id,
+                    remarks=data.get('remarks'),
+                    business_id=business_id,
+                    created_by=auth_id
+                )
+
+            # Update lead
+            lead.stage = stage
+            lead.save(update_fields=["stage"])
+
+            # Tracking
+            store_leads_tracking([lead], auth_id, old_lead_data)
+
+        return success_response('lead_stage_changed', status.HTTP_200_OK)
+
+    except Exception as e:
+        return error_response("lead_stage_change_failed", status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+
+@api_view(['POST'])
+@access_control_middleware
+def delete_attachment(request, lead_id, pk):
+    data = request.data
+    business_id = data.get('auth_business_id')
+    try:
+        lead_attachment = Attachment.objects.get(id=pk, business_id=business_id, lead_id=lead_id)
+        lead_attachment.delete()
+        return success_response('record_deleted', status.HTTP_200_OK)
+    except Attachment.DoesNotExist:
+        return error_response('lead_attachment_not_found', status.HTTP_404_NOT_FOUND)
 
 # # Import Leads Function
 # @api_view(['POST'])

@@ -286,19 +286,41 @@ def filter_by_start_and_end_date(queryset, filters):
     timezone = filters.get("auth_timezone")
 
     if start_date:
-        start_date = DateTimeConverter.to_utc_date(start_date, timezone)
+        start_date = DateTimeConverter.to_utc_range(start_date, timezone, is_end=False)
 
     if end_date:
-        end_date = DateTimeConverter.to_utc_date(end_date, timezone)
+        end_date = DateTimeConverter.to_utc_range(end_date, timezone, is_end=True)
 
     if start_date and end_date:
-        end_date = datetime.strptime(end_date, "%Y-%m-%d").date()
-        end_date = datetime.combine(end_date, time.max)
-        queryset = queryset.filter(date__gte=start_date, date__lte=end_date)
+        queryset = queryset.filter(date_time__gte=start_date, date_time__lte=end_date)
     elif start_date:
-        queryset = queryset.filter(date__date=start_date)
+        queryset = queryset.filter(date_time__gte=start_date)
     elif end_date:
-        queryset = queryset.filter(date__date=end_date)
+        queryset = queryset.filter(date_time__lte=end_date)
+
+    return queryset
+
+
+def filter_by_follow_up_types(queryset, filters):
+    follow_up_types = filters.get('follow_up_types')
+    if follow_up_types:
+        # Ensure follow_up_types is a list; if it's a single string, convert it into a list
+        if isinstance(follow_up_types, str):
+            follow_up_types = follow_up_types.split(',')  # Convert to a list after stripping spaces
+        elif isinstance(follow_up_types, list):
+            follow_up_types = [b.strip() for b in follow_up_types if b.strip()]  # Remove empty values
+
+        # Apply filter if the list is not empty
+        if follow_up_types:
+            queryset = queryset.filter(follow_up_type__in=follow_up_types)
+
+    return queryset
+
+def filter_by_done(queryset, filters):
+    is_done = filters.get('is_done')
+    if is_done is not None:
+        is_done = int(is_done)
+        queryset = queryset.filter(is_done=is_done)
 
     return queryset
 
@@ -309,18 +331,18 @@ def filter_by_duration(queryset, filters):
 
     return queryset
 
-def filter_by_followup_bys(queryset, filters):
-    follow_up_bys = filters.getlist('follow_up_bys[]') or filters.get('follow_up_bys')
-    if follow_up_bys:
-        # Ensure follow_up_bys is a list; if it's a single string, convert it into a list
-        if isinstance(follow_up_bys, str):
-            follow_up_bys = [follow_up_bys.strip()]  # Convert to a list after stripping spaces
-        elif isinstance(follow_up_bys, list):
-            follow_up_bys = [b.strip() for b in follow_up_bys if b.strip()]  # Remove empty values
+def filter_by_created_bys(queryset, filters):
+    created_bys = filters.get('created_bys')
+    if created_bys:
+        # Ensure created_bys is a list; if it's a single string, convert it into a list
+        if isinstance(created_bys, str):
+            created_bys = [created_bys.strip()]  # Convert to a list after stripping spaces
+        elif isinstance(created_bys, list):
+            created_bys = [b.strip() for b in created_bys if b.strip()]  # Remove empty values
 
         # Apply filter if the list is not empty
-        if follow_up_bys:
-            queryset = queryset.filter(follow_up_by__in=follow_up_bys)
+        if created_bys:
+            queryset = queryset.filter(created_by__in=created_bys)
 
     return queryset
 
