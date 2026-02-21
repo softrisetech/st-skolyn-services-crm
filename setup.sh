@@ -29,4 +29,4 @@ docker compose build
 docker compose up -d
 
 # Run migration command
-docker exec -it con_services_crm sh -c "python manage.py migrate && python manage.py permission_seed"
+docker exec -it skolyn_services_crm sh -c "python manage.py migrate && python manage.py permission_seed"
