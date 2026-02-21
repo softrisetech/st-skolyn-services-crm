@@ -1,5 +1,5 @@
 from django.urls import path
-from .views.followUpViews import FollowUpView
+from .views.followUpViews import get_lead_follow_ups, get_lead_follow_up, store_lead_follow_up, update_lead_follow_up, delete_lead_follow_up
 from .views.trackingViews import TrackingView
 from .views.tagViews import get_lead_tags, get_lead_tag, store_lead_tag, update_lead_tag, delete_lead_tag
 from .views.mediumViews import get_lead_mediums, get_lead_medium, store_lead_medium, update_lead_medium, delete_lead_medium
@@ -7,7 +7,7 @@ from .views.sourceViews import get_lead_sources, get_lead_source, store_lead_sou
 from .views.followUpTypeViews import get_lead_follow_up_types, get_lead_follow_up_type, store_lead_follow_up_type, update_lead_follow_up_type, delete_lead_follow_up_type
 from .views.stageViews import get_lead_stages, get_lead_stage, store_lead_stage, update_lead_stage, delete_lead_stage
 from .views.dashboardViews import leads_by_source, leads_by_medium, leads_by_stage, funnel_stages, leads_by_tag, leads_by_branch, leads_by_session, monthly_leads
-from .views.leadViews import get_leads, store_lead, get_lead, update_lead, delete_lead
+from .views.leadViews import get_leads, store_lead, get_lead, update_lead, delete_lead, change_stage, delete_attachment
 from .views.stageReasonViews import get_stage_reasons, get_stage_reason, store_stage_reason, update_stage_reason, delete_stage_reason
 from .views.campaignViews import get_lead_campaigns, get_lead_campaign, store_lead_campaign, update_lead_campaign, delete_lead_campaign
 from .views.teamViews import get_lead_teams, get_lead_team, store_lead_team, update_lead_team, delete_lead_team
@@ -68,6 +68,14 @@ urlpatterns = [
     path('leads/store', store_lead),
     path('leads/<uuid:pk>/update', update_lead),
     path('leads/<uuid:pk>/delete', delete_lead),
+    path('leads/<uuid:pk>/change/stage', change_stage),
+    path('leads/<uuid:lead_id>/attachment/<uuid:pk>/delete', delete_attachment),
+
+    path('lead/<uuid:lead_id>/follow-ups/list', get_lead_follow_ups),
+    path('lead/<uuid:lead_id>/follow-ups/<uuid:pk>/get', get_lead_follow_up),
+    path('lead/<uuid:lead_id>/follow-ups/store', store_lead_follow_up),
+    path('lead/<uuid:lead_id>/follow-ups/<uuid:pk>/update', update_lead_follow_up),
+    path('lead/<uuid:lead_id>/follow-ups/<uuid:pk>/delete', delete_lead_follow_up),
 
 
     # path('leads/', lead_list),
