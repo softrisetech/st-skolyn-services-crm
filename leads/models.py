@@ -166,7 +166,7 @@ class Lead(BaseBusinessModel):
     tag = models.ForeignKey('Tag', on_delete=models.CASCADE, null=True, blank=True, db_index=True)
     stage = models.ForeignKey('Stage', on_delete=models.CASCADE, db_index=True)
     team = models.ForeignKey('Team', on_delete=models.CASCADE, null=True, blank=True, db_index=True)
-    contact = models.OneToOneField('Contact', on_delete=models.CASCADE)
+    contact = models.ForeignKey('Contact', on_delete=models.CASCADE, null=True, blank=True, db_index=True)
     campaign = models.ForeignKey('Campaign', on_delete=models.CASCADE, null=True, blank=True, db_index=True)
     code = models.CharField(max_length=CHAR_LENGTH)
     created_by = models.UUIDField(db_index=True)
@@ -220,19 +220,23 @@ class Lead(BaseBusinessModel):
             return None
 
     def get_attachments(self):
-        attachments = Attachment.objects.filter(lead_id=self.id).values("id", "file")
+        attachments = Attachment.objects.filter(lead_id=self.id)
 
-        # Convert UUIDs to strings
-        formatted_attachments = [
-            {"id": str(attachment["id"]), "file": attachment["file"]} for attachment in attachments
-        ]
+        if not attachments.exists():
+            return None
 
-        return formatted_attachments if formatted_attachments else None
+        processed_files = []
+        for att in attachments:
+            file_obj = att.file  # access the file JSONField or dict
+            if file_obj:
+                processed_files.append(file_obj)
+
+        return processed_files
     
 
 
 class Tracking(BaseBusinessModel):
-    lead = models.ForeignKey('Lead', on_delete=models.CASCADE, db_index=True)
+    lead = models.ForeignKey('Lead', on_delete=models.CASCADE, db_index=True, related_name='trackings')
     model_id = models.UUIDField()
     model_type = models.CharField(max_length=CHAR_LENGTH)
     user_id = models.UUIDField(db_index=True)
@@ -289,7 +293,7 @@ class StageReasonEntry(BaseBusinessModel):
 
 
 class Attachment(BaseBusinessModel):
-    lead = models.ForeignKey('Lead', on_delete=models.CASCADE, db_index=True)
+    lead = models.ForeignKey('Lead', on_delete=models.CASCADE, db_index=True, related_name='attachments')
     file = models.JSONField(max_length=LONG_CHAR_LENGTH)
 
 

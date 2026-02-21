@@ -10,11 +10,15 @@ DECIMAL_LENGTH = 10
 DECIMAL_PLACES_LENGTH = 2
 
 # Module Types
-STAGE = 1
-MEDIUM = 2
-SOURCE = 3
-TAG = 4
-BRANCH = 5
+STAGE = "stage"
+MEDIUM = "medium"
+SOURCE = "source"
+TAG = "tag"
+BRANCH = "branch"
+TEAM = "team"
+CAMPAIGN = "campaign"
+SESSION = "session"
+ASSIGNED_TO = "assigned_to"
 
 OPEN = "open"
 WON = "won"
