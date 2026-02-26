@@ -16,7 +16,7 @@ from core.utils.date_time_converter import DateTimeConverter
 from core.utils.response_utils import success_response, error_response
 from core.utils.notification_utils import notification, notification_obj
 from core.constants.model_constants import STAGE, MEDIUM, SOURCE, TAG, BRANCH, SESSION, ASSIGNED_TO, TEAM, CAMPAIGN
-from ..serializers import LeadListSerializer, LeadStoreSerializer, LeadGetSerializer, StageLeadSerializer, LeadImportSerializer, ContactSerializer
+from ..serializers import LeadListSerializer, LeadStoreSerializer, LeadGetSerializer, KanbanLeadSerializer, LeadImportSerializer, ContactSerializer
 from access_control.utils.permission_helpers import view_branch_wise, view_modify_all
 from ..models import Lead, Stage, Source, Medium, Attachment, Tracking, Tag, StageReason, Team, Campaign, StageReasonEntry
 from core.utils.model_helpers import lead_default_stage, tracking_object, verify_lead_missing_fields
@@ -291,6 +291,67 @@ def delete_attachment(request, lead_id, pk):
         return success_response('record_deleted', status.HTTP_200_OK)
     except Attachment.DoesNotExist:
         return error_response('lead_attachment_not_found', status.HTTP_404_NOT_FOUND)
+    
+
+@api_view(['POST'])
+@access_control_middleware
+def get_leads_kanban(request, stage_id=None):
+    data = request.data
+    business_id = data.get('auth_business_id')
+    queryset = __queryset(business_id)
+    #Get pagination params
+    page = int(request.query_params.get('page', 1))
+    page_size = int(request.query_params.get('page_size', 20))
+    skip = (page - 1) * page_size
+    take = skip + page_size
+
+    if stage_id:
+        stage_leads = queryset.filter(stage=stage_id)[skip:take]
+        serialized_data = KanbanLeadSerializer(stage_leads, many=True).data
+        data = {
+                "items": serialized_data,
+                "pagination": {
+                "page": page,
+                "page_size": page_size,
+                "all_items_count": queryset.filter(stage=stage_id).count(),
+                "total_pages": math.ceil(queryset.filter(stage=stage_id).count()/page_size),
+                "remaining_items_count": max(queryset.filter(stage=stage_id).count() - (page_size * page), 0)
+            }
+        }
+        return success_response('record_fetched', status.HTTP_200_OK, data)
+
+    queryset = __apply_filters(queryset, data)
+    stages = Stage.objects.filter(business_id=business_id, is_active=1).order_by(
+        Case(
+            When(type="open", then=0),
+            When(type="won", then=1),
+            When(type="lost", then=2),
+            default=3,
+            output_field=IntegerField(),
+        ),
+        "priority"
+    )
+
+    grouped_leads = {"stages": []}
+    for stage in stages:
+        stage_leads = queryset.filter(stage=stage.id)[skip:take]  # Apply Skip-Take (Offset-Limit)
+        serialized_data = KanbanLeadSerializer(stage_leads, many=True).data
+        total_items = queryset.filter(stage=stage.id).count()
+
+        grouped_leads["stages"].append({  # Append each stage's data to the list
+            "id": stage.id,
+            "name": stage.name,
+            "type": stage.type,
+            "items": serialized_data,
+            "pagination": {
+                "page": page,
+                "page_size": page_size,
+                "all_items_count": total_items,
+                "total_pages": math.ceil(total_items / page_size),
+                "remaining_items_count": max(total_items - skip - page_size, 0)
+            }
+        })
+    return success_response('record_fetched', status.HTTP_200_OK, grouped_leads)
 
 # # Import Leads Function
 # @api_view(['POST'])
