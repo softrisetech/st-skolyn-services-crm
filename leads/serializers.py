@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from core.constants.model_constants import STAGE, TEAM, MEDIUM, TAG, SOURCE, CAMPAIGN
-from .models import Attachment, Lead, FollowUp, Medium, Source, Stage, StageReason, Tag, Campaign, Tracking, FollowUpType, Team, TeamMember, Contact
+from .models import PreRequisite, PreRequisiteCourse, Institute, Attachment, Lead, FollowUp, Medium, Source, Stage, StageReason, Tag, Campaign, Tracking, FollowUpType, Team, TeamMember, Contact
 
 NAME_ALREADY_EXISTS = "The name already exists"
 
@@ -104,6 +104,19 @@ class FollowUpSerializer(serializers.ModelSerializer):
     class Meta:
         model = FollowUp
         fields = ["id", "business_id", "lead", "follow_up_type", "follow_type_name", "created_by", "date_time", "description", "is_done", "created_at", "updated_at"]
+
+class PreRequisiteCourseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PreRequisiteCourse
+        fields = ['id', 'business_id', 'lead', 'prerequisite', 'course_name', 'max_marks', 'passing_marks', 'marks_in_percentage', 'is_mandatory']
+
+class PreRequisiteSerializer(serializers.ModelSerializer):
+    courses = PreRequisiteCourseSerializer(many=True, read_only=True)
+    institute_name = serializers.CharField(source="institute.name", read_only=True)
+    class Meta:
+        model = PreRequisite
+        fields = ["id", "business_id", "lead", "institute", "institute_name", "board_name", "code", "program", "courses", "created_at", "updated_at"]
+
 
 class MediumSerializer(serializers.ModelSerializer):
     class Meta:
@@ -216,6 +229,28 @@ class TagSerializer(serializers.ModelSerializer):
 
         return data
     
+
+class InstituteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Institute
+        fields = ['id', 'business_id', 'name', 'is_active', 'created_at', 'updated_at']
+
+    def validate(self, data):
+        errors = {}
+        name = data.get('name')
+        business_id = data.get('business_id')
+
+        if self.instance:
+            if Institute.objects.filter(name=name, business_id=business_id).exclude(id=self.instance.id).exists():
+                errors["name"] = [NAME_ALREADY_EXISTS]
+        else:
+            if Institute.objects.filter(name=name, business_id=business_id).exists():
+                errors["name"] = [NAME_ALREADY_EXISTS]
+
+        if errors:
+            raise serializers.ValidationError(errors)
+
+        return data
 
 
 class CampaignSerializer(serializers.ModelSerializer):
