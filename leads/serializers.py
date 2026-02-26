@@ -9,8 +9,8 @@ class ContactSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contact
         fields = [
-            "id", "father_first_name", "father_last_name", "father_contact_number", "father_email", "father_nic", "is_father_applicable",
-            "mother_first_name", "mother_last_name", "mother_contact_number", "mother_email", "mother_nic", "is_mother_applicable"
+            "id", "business_id", "father_first_name", "father_last_name", "father_contact_number", "father_email", "father_nic", "is_father_applicable",
+            "mother_first_name", "mother_last_name", "mother_contact_number", "mother_email", "mother_nic", "is_mother_applicable", "created_at", "updated_at"
         ]
 
 class AttachmentSerializer(serializers.ModelSerializer):
@@ -29,7 +29,7 @@ class LeadListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lead
         fields = [
-                    "id", "business_id", "branch_id", "session_id", "medium", "medium_name", "source", "source_name", "stage", "stage_name", "tag", "tag_name", "team", "team_name", "campaign", "campaign_name", "contact", "code", "created_by", "assigned_to", "country_id",
+                    "id", "business_id", "branch_id", "session_id", "class_id", "medium", "medium_name", "source", "source_name", "stage", "stage_name", "tag", "tag_name", "team", "team_name", "campaign", "campaign_name", "contact", "code", "created_by", "assigned_to", "country_id",
                     "state_id", "city_id", "first_name", "last_name", "priority", "date_of_birth", "contact_number",
                     "email", "nic", "gender", "ethnicity", "remarks", "is_imported", "imported_at", "created_at", "updated_at"
                 ]
@@ -46,7 +46,7 @@ class LeadGetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lead
         fields = [
-                    "id", "business_id", "branch_id", "session_id", "medium", "medium_name", "source", "source_name", "stage", "stage_name", "tag", "tag_name", "team", "team_name", "campaign", "campaign_name", "contact", "code", "created_by", "assigned_to", "country_id",
+                    "id", "business_id", "branch_id", "session_id", "class_id", "medium", "medium_name", "source", "source_name", "stage", "stage_name", "tag", "tag_name", "team", "team_name", "campaign", "campaign_name", "contact", "code", "created_by", "assigned_to", "country_id",
                     "state_id", "city_id", "first_name", "last_name", "priority", "date_of_birth", "contact_number",
                     "email", "nic", "gender", "ethnicity", "remarks", "is_imported", "imported_at", "created_at", "updated_at", "attachments"
                 ]
@@ -59,7 +59,7 @@ class LeadStoreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lead
         fields = [
-                    "id", "business_id", "branch_id", "session_id", "medium", "source", "stage", "tag", "team", "campaign", "contact", "code", "created_by", "assigned_to", "country_id",
+                    "id", "business_id", "branch_id", "session_id", "class_id", "medium", "source", "stage", "tag", "team", "campaign", "contact", "code", "created_by", "assigned_to", "country_id",
                     "state_id", "city_id", "first_name", "last_name", "priority", "date_of_birth", "contact_number",
                     "email", "nic", "gender", "ethnicity", "remarks", "is_imported", "imported_at", "created_at", "updated_at"
                 ]
