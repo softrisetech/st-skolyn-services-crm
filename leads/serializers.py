@@ -87,15 +87,11 @@ class LeadStoreSerializer(serializers.ModelSerializer):
     #     return attachments if attachments else []
 
 
-class StageLeadSerializer(serializers.ModelSerializer):
-    source_name = serializers.SerializerMethodField()
+class KanbanLeadSerializer(serializers.ModelSerializer):
+    source_name = serializers.CharField(source="source.name", read_only=True)
     class Meta:
         model = Lead
-        fields = ['id', 'business_id', 'source_name', 'name', 'previous_education', 'priority', 'session_id', 'branch_id', 'assigned_to']
-
-    def get_source_name(self, obj):
-        source = obj.get_source()
-        return source.name if source else None
+        fields = ['id', 'business_id', 'source_name', 'first_name', 'last_name', 'priority', 'session_id', 'branch_id', 'assigned_to']
 
 
 class FollowUpSerializer(serializers.ModelSerializer):
