@@ -11,6 +11,8 @@ from .views.leadViews import get_leads, store_lead, get_lead, update_lead, delet
 from .views.stageReasonViews import get_stage_reasons, get_stage_reason, store_stage_reason, update_stage_reason, delete_stage_reason
 from .views.campaignViews import get_lead_campaigns, get_lead_campaign, store_lead_campaign, update_lead_campaign, delete_lead_campaign
 from .views.teamViews import get_lead_teams, get_lead_team, store_lead_team, update_lead_team, delete_lead_team
+from .views.contactViews import get_lead_contacts, get_lead_contact, store_lead_contact, update_lead_contact, delete_lead_contact
+
 
 urlpatterns = [
 
@@ -77,6 +79,11 @@ urlpatterns = [
     path('lead/<uuid:lead_id>/follow-ups/<uuid:pk>/update', update_lead_follow_up),
     path('lead/<uuid:lead_id>/follow-ups/<uuid:pk>/delete', delete_lead_follow_up),
 
+    path('lead/contacts/list', get_lead_contacts),
+    path('lead/contacts/<uuid:pk>/get', get_lead_contact),
+    path('lead/contacts/store', store_lead_contact),
+    path('lead/contacts/<uuid:pk>/update', update_lead_contact),
+    path('lead/contacts/<uuid:pk>/delete', delete_lead_contact),
 
     # path('leads/', lead_list),
     # path('leads/stage-wise/', lead_list_stage_wise),

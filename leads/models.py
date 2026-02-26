@@ -161,6 +161,7 @@ class Contact(BaseBusinessModel):
 class Lead(BaseBusinessModel):
     branch_id = models.UUIDField(db_index=True)
     session_id = models.UUIDField(null=True, blank=True, db_index=True)
+    class_id = models.UUIDField(null=True, blank=True, db_index=True)
     medium = models.ForeignKey('Medium', on_delete=models.CASCADE, null=True, blank=True, db_index=True)
     source = models.ForeignKey('Source', on_delete=models.CASCADE, null=True, blank=True, db_index=True)
     tag = models.ForeignKey('Tag', on_delete=models.CASCADE, null=True, blank=True, db_index=True)
