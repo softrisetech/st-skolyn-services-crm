@@ -12,7 +12,8 @@ from .views.stageReasonViews import get_stage_reasons, get_stage_reason, store_s
 from .views.campaignViews import get_lead_campaigns, get_lead_campaign, store_lead_campaign, update_lead_campaign, delete_lead_campaign
 from .views.teamViews import get_lead_teams, get_lead_team, store_lead_team, update_lead_team, delete_lead_team
 from .views.contactViews import get_lead_contacts, get_lead_contact, store_lead_contact, update_lead_contact, delete_lead_contact
-
+from .views.instituteViews import get_lead_institutes, get_lead_institute, store_lead_institute, update_lead_institute, delete_lead_institute
+from .views.preRequisiteViews import get_lead_pre_requisites, store_lead_pre_requisite, update_lead_pre_requisite, delete_lead_pre_requisite
 
 urlpatterns = [
 
@@ -46,6 +47,12 @@ urlpatterns = [
     path('lead/tags/<uuid:pk>/update', update_lead_tag),
     path('lead/tags/<uuid:pk>/delete', delete_lead_tag),
 
+    path('lead/institutes/list', get_lead_institutes),
+    path('lead/institutes/<uuid:pk>/get', get_lead_institute),
+    path('lead/institutes/store', store_lead_institute),
+    path('lead/institutes/<uuid:pk>/update', update_lead_institute),
+    path('lead/institutes/<uuid:pk>/delete', delete_lead_institute),
+
     path('lead/campaigns/list', get_lead_campaigns),
     path('lead/campaigns/<uuid:pk>/get', get_lead_campaign),
     path('lead/campaigns/store', store_lead_campaign),
@@ -78,6 +85,11 @@ urlpatterns = [
     path('lead/<uuid:lead_id>/follow-ups/store', store_lead_follow_up),
     path('lead/<uuid:lead_id>/follow-ups/<uuid:pk>/update', update_lead_follow_up),
     path('lead/<uuid:lead_id>/follow-ups/<uuid:pk>/delete', delete_lead_follow_up),
+
+    path('lead/<uuid:lead_id>/pre-requisites/list', get_lead_pre_requisites),
+    path('lead/<uuid:lead_id>/pre-requisites/store', store_lead_pre_requisite),
+    path('lead/<uuid:lead_id>/pre-requisites/<uuid:pk>/update', update_lead_pre_requisite),
+    path('lead/<uuid:lead_id>/pre-requisites/<uuid:pk>/delete', delete_lead_pre_requisite),
 
     path('lead/contacts/list', get_lead_contacts),
     path('lead/contacts/<uuid:pk>/get', get_lead_contact),

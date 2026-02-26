@@ -313,15 +313,23 @@ class Attachment(BaseBusinessModel):
     file = models.JSONField(max_length=LONG_CHAR_LENGTH)
 
 
+class Institute(BaseBusinessModel):
+    name = models.CharField(max_length=CHAR_LENGTH)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['-updated_at']
+
 class PreRequisite(BaseBusinessModel):
-    institution_name = models.CharField(max_length=CHAR_LENGTH, null=True, blank=True)
+    lead = models.ForeignKey('Lead', on_delete=models.CASCADE, db_index=True, null=True, blank=True)
+    institute = models.ForeignKey('Institute', on_delete=models.CASCADE, db_index=True, null=True, blank=True)
     board_name = models.CharField(max_length=CHAR_LENGTH, null=True, blank=True)
     code = models.CharField(max_length=CHAR_LENGTH, null=True, blank=True)
     program = models.CharField(max_length=CHAR_LENGTH, null=True, blank=True)
     
 
 class PreRequisiteCourse(BaseBusinessModel):
-    prerequisite = models.ForeignKey('PreRequisite', on_delete=models.CASCADE, db_index=True)
+    prerequisite = models.ForeignKey('PreRequisite', on_delete=models.CASCADE, db_index=True, related_name='courses')
     lead = models.ForeignKey('Lead', on_delete=models.CASCADE, db_index=True)
     course_name = models.CharField(max_length=CHAR_LENGTH, null=True, blank=True)
     max_marks = models.IntegerField()
