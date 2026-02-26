@@ -269,6 +269,20 @@ class Tracking(BaseBusinessModel):
             return tag
         except Tag.DoesNotExist:
             return None
+        
+    def get_team(self):
+        try:
+            team = Team.objects.get(id=self.model_id)
+            return team
+        except Team.DoesNotExist:
+            return None
+        
+    def get_campaign(self):
+        try:
+            campaign = Campaign.objects.get(id=self.model_id)
+            return campaign
+        except Campaign.DoesNotExist:
+            return None
 
 
 class FollowUp(BaseBusinessModel):

@@ -110,6 +110,22 @@ def filter_by_cities(queryset, filters):
 
     return queryset
 
+def filter_by_classes(queryset, filters):
+    classes = filters.get('classes')
+    if classes:
+        # Ensure classes is a list; if it's a single string, convert it into a list
+        if isinstance(classes, str):
+            classes = classes.split(',')  # Convert to a list after stripping spaces
+        elif isinstance(classes, list):
+            classes = [b.strip() for b in classes if b.strip()]  # Remove empty values
+
+        # Apply filter if the list is not empty
+        if classes:
+            queryset = queryset.filter(class_id__in=classes)
+
+    return queryset
+
+
 def filter_by_mediums(queryset, filters):
     mediums = filters.get('mediums')
     if mediums:
