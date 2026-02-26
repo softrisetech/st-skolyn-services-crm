@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from core.constants.model_constants import STAGE, BRANCH, MEDIUM, TAG, SOURCE
+from core.constants.model_constants import STAGE, TEAM, MEDIUM, TAG, SOURCE, CAMPAIGN
 from .models import Attachment, Lead, FollowUp, Medium, Source, Stage, StageReason, Tag, Campaign, Tracking, FollowUpType, Team, TeamMember, Contact
 
 NAME_ALREADY_EXISTS = "The name already exists"
@@ -244,12 +244,11 @@ class CampaignSerializer(serializers.ModelSerializer):
 class TrackingSerializer(serializers.ModelSerializer):
     created_at = serializers.DateTimeField(format='%Y-%m-%d %H:%M:%S', read_only=True)
     name = serializers.SerializerMethodField()
-    model_name = serializers.SerializerMethodField()
 
     class Meta:
         model = Tracking
         fields = [
-            'id', 'business_id', 'lead_id', 'model_id', 'model_type', 'model_name', 'name', 'created_at', 'user_id'
+            'id', 'business_id', 'lead_id', 'model_id', 'model_type', 'name', 'created_at', 'user_id'
         ]
 
     def get_name(self, obj):
@@ -261,20 +260,10 @@ class TrackingSerializer(serializers.ModelSerializer):
             return obj.get_medium().name
         elif obj.model_type == TAG:
             return obj.get_tag().name
-        else:
-            return ""
-
-    def get_model_name(self, obj):
-        if obj.model_type == STAGE:
-            return "Stage"
-        elif obj.model_type == SOURCE:
-            return "Source"
-        elif obj.model_type == MEDIUM:
-            return "Medium"
-        elif obj.model_type == TAG:
-            return "Tag"
-        elif obj.model_type == BRANCH:
-            return "Branch"
+        elif obj.model_type == TEAM:
+            return obj.get_team().name
+        elif obj.model_type == CAMPAIGN:
+            return obj.get_campaign().name
         else:
             return ""
 

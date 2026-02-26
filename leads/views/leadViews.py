@@ -21,7 +21,7 @@ from access_control.utils.permission_helpers import view_branch_wise, view_modif
 from ..models import Lead, Stage, Source, Medium, Attachment, Tracking, Tag, StageReason, Team, Campaign, StageReasonEntry
 from core.utils.model_helpers import lead_default_stage, tracking_object, verify_lead_missing_fields
 from access_control.utils.permission_constants import LEAD_VIEW_ALL, LEAD_BRANCH_WISE, LEAD_MODIFY_ALL
-from leads.utils.filters import filter_by_sort_order, filter_by_campaigns, filter_by_teams, filter_by_priority, filter_by_countries, filter_by_states, filter_by_cities, lead_search_filter, filter_by_date_range, filter_by_branches, filter_by_created_by, filter_by_assigned_to, filter_by_mediums, filter_by_generated, filter_by_sessions, filter_by_sources, filter_by_stages, filter_by_tags
+from leads.utils.filters import filter_by_classes, filter_by_sort_order, filter_by_campaigns, filter_by_teams, filter_by_priority, filter_by_countries, filter_by_states, filter_by_cities, lead_search_filter, filter_by_date_range, filter_by_branches, filter_by_created_by, filter_by_assigned_to, filter_by_mediums, filter_by_generated, filter_by_sessions, filter_by_sources, filter_by_stages, filter_by_tags
 from core.utils.helpers import has_active_child_references
 
 
@@ -33,6 +33,7 @@ def __apply_filters(queryset, filters):
     queryset = lead_search_filter(queryset, filters)
     queryset = filter_by_branches(queryset, filters)
     queryset = filter_by_sessions(queryset, filters)
+    queryset = filter_by_classes(queryset, filters)
     queryset = filter_by_created_by(queryset, filters)
     queryset = filter_by_assigned_to(queryset, filters)
     queryset = filter_by_countries(queryset, filters)

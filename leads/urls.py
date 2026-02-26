@@ -1,6 +1,6 @@
 from django.urls import path
 from .views.followUpViews import get_lead_follow_ups, get_lead_follow_up, store_lead_follow_up, update_lead_follow_up, delete_lead_follow_up
-from .views.trackingViews import TrackingView
+from .views.trackingViews import get_lead_trackings
 from .views.tagViews import get_lead_tags, get_lead_tag, store_lead_tag, update_lead_tag, delete_lead_tag
 from .views.mediumViews import get_lead_mediums, get_lead_medium, store_lead_medium, update_lead_medium, delete_lead_medium
 from .views.sourceViews import get_lead_sources, get_lead_source, store_lead_source, update_lead_source, delete_lead_source
@@ -84,6 +84,8 @@ urlpatterns = [
     path('lead/contacts/store', store_lead_contact),
     path('lead/contacts/<uuid:pk>/update', update_lead_contact),
     path('lead/contacts/<uuid:pk>/delete', delete_lead_contact),
+
+    path('lead/trackings/list', get_lead_trackings),
 
     # path('leads/', lead_list),
     # path('leads/stage-wise/', lead_list_stage_wise),
