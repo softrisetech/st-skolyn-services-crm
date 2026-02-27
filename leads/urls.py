@@ -62,7 +62,8 @@ from .views.leadViews import (
     update_lead, 
     delete_lead, 
     change_stage, 
-    delete_attachment
+    delete_attachment,
+    generate_leads
 )
 from .views.stageReasonViews import (
     get_stage_reasons, 
@@ -182,6 +183,7 @@ urlpatterns = [
     path('leads/<uuid:lead_id>/attachment/<uuid:pk>/delete', delete_attachment),
     path('leads/kanban', get_leads_kanban),
     path('leads/kanban/<uuid:stage_id>', get_leads_kanban),
+    path('leads/generate', generate_leads),
 
     path('lead/<uuid:lead_id>/follow-ups/list', get_lead_follow_ups),
     path('lead/<uuid:lead_id>/follow-ups/<uuid:pk>/get', get_lead_follow_up),

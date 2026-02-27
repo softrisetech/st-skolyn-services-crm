@@ -1,9 +1,9 @@
 import json
 import random
 import string
+import base64
 from ..models import Stage
 from datetime import datetime
-from django.core import signing
 from django.db import IntegrityError
 from core.utils.notification_utils import notification_obj
 
@@ -50,13 +50,11 @@ def generate_unique_code(model, prefix="LD"):
 
 
 
-SIGNING_SALT = "business-id-secure"
-
 def encrypt_business_id(business_id):
-    return signing.dumps(str(business_id), salt=SIGNING_SALT)
+    return base64.urlsafe_b64encode(str(business_id).encode()).decode()
 
 def decrypt_business_id(encrypted_id):
     try:
-        return signing.loads(encrypted_id, salt=SIGNING_SALT)
-    except signing.BadSignature:
+        return base64.urlsafe_b64decode(encrypted_id.encode()).decode()
+    except Exception:
         return None
