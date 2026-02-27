@@ -21,12 +21,33 @@ from access_control.utils.permission_helpers import view_branch_wise, view_modif
 from ..models import Lead, Stage, Source, Medium, Attachment, Tracking, Tag, StageReason, Team, Campaign, StageReasonEntry
 from core.utils.model_helpers import lead_default_stage, tracking_object, verify_lead_missing_fields
 from access_control.utils.permission_constants import LEAD_VIEW_ALL, LEAD_BRANCH_WISE, LEAD_MODIFY_ALL
-from leads.utils.filters import filter_by_classes, filter_by_sort_order, filter_by_campaigns, filter_by_teams, filter_by_priority, filter_by_countries, filter_by_states, filter_by_cities, lead_search_filter, filter_by_date_range, filter_by_branches, filter_by_created_by, filter_by_assigned_to, filter_by_mediums, filter_by_generated, filter_by_sessions, filter_by_sources, filter_by_stages, filter_by_tags
+from leads.utils.filters import filter_by_classes, filter_by_sort_order, filter_by_campaigns, filter_by_teams, filter_by_priority, filter_by_countries, filter_by_states, filter_by_cities, lead_search_filter, filter_by_date_range, filter_by_branches, filter_by_created_by, filter_by_assigned_to, filter_by_mediums, filter_by_sessions, filter_by_sources, filter_by_stages, filter_by_tags
 from core.utils.helpers import has_active_child_references
 
 
-def __queryset(business_id):
-    return Lead.objects.filter(business_id=business_id)
+def __queryset(data, business_id):
+    filters = {"business_id": business_id}
+    is_staff = check_if_user_is_staff(data)
+    if is_staff == "true":
+        user_id = data.get('auth_id')
+        role_id = data.get('auth_role_id')
+        view_all = LEAD_VIEW_ALL
+        branch_wise = LEAD_BRANCH_WISE
+        have_view_all_permission = view_modify_all(user_id, role_id, view_all)
+        have_branch_wise_permission = view_branch_wise(user_id, role_id, branch_wise)
+        queryset = Lead.objects.filter(**filters)
+
+        if not have_view_all_permission:
+            # Add OR condition: created_by=user_id OR assigned_to=user_id
+            queryset = queryset.filter(Q(created_by=user_id) | Q(assigned_to=user_id))
+
+        if have_branch_wise_permission:
+            branch_id = data.get("auth_branch_id")
+            queryset = queryset.filter(branch_id=branch_id)
+
+        return queryset
+
+    return Lead.objects.filter(**filters)
 
 
 def __apply_filters(queryset, filters):
@@ -58,7 +79,7 @@ def get_leads(request):
     data = request.data
     business_id = data.get('auth_business_id')
     userTimezone = data.get("auth_timezone")
-    queryset = __queryset(business_id)
+    queryset = __queryset(data, business_id)
     queryset = __apply_filters(queryset, data)
     paginator = CustomPagination()
     paginated_queryset = paginator.paginate_queryset(queryset, request)
@@ -121,7 +142,7 @@ def get_lead(request, pk):
     data = request.data
     business_id = data.get('auth_business_id')
     userTimezone = data.get("auth_timezone")
-    queryset = __queryset(business_id)
+    queryset = __queryset(data, business_id)
     lead = queryset.filter(id=pk).first()
     serialized_data = LeadGetSerializer(lead).data
 
@@ -143,8 +164,8 @@ def update_lead(request, pk):
     role_id = data.get('auth_role_id')
     is_staff = check_if_user_is_staff(data)
 
-    quertset = __queryset(business_id)
-    lead = quertset.filter(id=pk).first()
+    queryset = __queryset(data, business_id)
+    lead = queryset.filter(id=pk).first()
     if not lead:
         return error_response('lead_not_found', status.HTTP_404_NOT_FOUND)
     old_lead_data = copy.deepcopy(lead) 
@@ -192,7 +213,7 @@ def delete_lead(request, pk):
     role_id = data.get('auth_role_id')
     is_staff = check_if_user_is_staff(data)
 
-    queryset = __queryset(business_id)
+    queryset = __queryset(data, business_id)
     lead = queryset.filter(id=pk).first()
     if not lead:
         return error_response('lead_not_found', status.HTTP_404_NOT_FOUND)
@@ -224,7 +245,7 @@ def change_stage(request, pk):
     role_id = data.get('auth_role_id')
     is_staff = check_if_user_is_staff(data)
 
-    queryset = __queryset(business_id)
+    queryset = __queryset(data, business_id)
     lead = queryset.filter(id=pk).first()
     if not lead:
         return error_response('lead_not_found', status.HTTP_404_NOT_FOUND)
@@ -298,7 +319,7 @@ def delete_attachment(request, lead_id, pk):
 def get_leads_kanban(request, stage_id=None):
     data = request.data
     business_id = data.get('auth_business_id')
-    queryset = __queryset(business_id)
+    queryset = __queryset(data, business_id)
     #Get pagination params
     page = int(request.query_params.get('page', 1))
     page_size = int(request.query_params.get('page_size', 20))
