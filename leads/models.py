@@ -25,6 +25,7 @@ class Source(BaseBusinessModel):
     slug = AutoSlugField(populate_from='name', unique=True, blank=True, null=True, unique_with=['business_id'], always_update=True)
     description = models.TextField(max_length=LONG_CHAR_LENGTH, blank=True)
     is_active = models.BooleanField(default=True)
+    encrypted_business_id = models.CharField(max_length=CHAR_LENGTH, null=True, blank=True)
 
     class Meta:
         ordering = ['-updated_at']

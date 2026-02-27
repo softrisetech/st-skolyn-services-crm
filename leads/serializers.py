@@ -139,7 +139,7 @@ class MediumSerializer(serializers.ModelSerializer):
 class SourceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Source
-        fields = ['id', 'business_id', 'name', 'slug', 'description', 'is_active', 'created_at', 'updated_at']
+        fields = ['id', 'business_id', 'name', 'slug', 'description', 'is_active', 'encrypted_business_id', 'created_at', 'updated_at']
 
     def validate(self, data):
         errors = {}
@@ -270,6 +270,12 @@ class CampaignSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(errors)
 
         return data
+    
+
+class DashboardCampaignSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Campaign
+        fields = ['id', 'name', 'is_active', 'created_at', 'updated_at']
     
     
 class TrackingSerializer(serializers.ModelSerializer):

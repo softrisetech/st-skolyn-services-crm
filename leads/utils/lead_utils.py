@@ -1,10 +1,11 @@
 import json
-from ..models import Stage
-from core.utils.notification_utils import notification_obj
 import random
 import string
+from ..models import Stage
 from datetime import datetime
+from django.core import signing
 from django.db import IntegrityError
+from core.utils.notification_utils import notification_obj
 
 def handle_email_trigger(request, lead, notifications):
     if lead.p_email is not None:
@@ -46,3 +47,16 @@ def generate_unique_code(model, prefix="LD"):
             return code
 
     raise Exception("Unable to generate unique lead code")
+
+
+
+SIGNING_SALT = "business-id-secure"
+
+def encrypt_business_id(business_id):
+    return signing.dumps(str(business_id), salt=SIGNING_SALT)
+
+def decrypt_business_id(encrypted_id):
+    try:
+        return signing.loads(encrypted_id, salt=SIGNING_SALT)
+    except signing.BadSignature:
+        return None

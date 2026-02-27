@@ -3,6 +3,7 @@ from rest_framework import status
 from ..models import Source, Lead
 from ..serializers import SourceSerializer
 from rest_framework.decorators import api_view
+from ..utils.lead_utils import encrypt_business_id
 from core.utils.pagination_utils import CustomPagination
 from core.utils.helpers import has_active_child_references
 from core.utils.decorators import access_control_middleware
@@ -68,6 +69,7 @@ def get_lead_source(request, pk=None):
 def store_lead_source(request):
     data = request.data.copy()
     data['business_id'] = data.get('auth_business_id')
+    data['encrypted_business_id'] = encrypt_business_id(data['business_id'])
     serializer = SourceSerializer(data=data)
     if not serializer.is_valid():
         return error_response('record_store_failed', status.HTTP_422_UNPROCESSABLE_ENTITY, serializer.errors)
