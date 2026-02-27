@@ -42,6 +42,7 @@ def get_lead_sources(request):
     paginated_queryset = paginator.paginate_queryset(queryset, request)
     serialized_data = SourceSerializer(paginated_queryset, many=True).data
     for data in serialized_data:
+        data["encrypted_business_id"] = encrypt_business_id(business_id)
         data["created_at"] = DateTimeConverter.from_utc_datetime(data["created_at"], timezone)
         data["updated_at"] = DateTimeConverter.from_utc_datetime(data["updated_at"], timezone)
     response_data = paginator.get_paginated_response(serialized_data)
@@ -59,6 +60,7 @@ def get_lead_source(request, pk=None):
         return error_response('source_not_found', status.HTTP_404_NOT_FOUND)
 
     serialized_data = SourceSerializer(source).data
+    serialized_data["encrypted_business_id"] = encrypt_business_id(business_id)
     serialized_data["created_at"] = DateTimeConverter.from_utc_datetime(serialized_data["created_at"], timezone)
     serialized_data["updated_at"] = DateTimeConverter.from_utc_datetime(serialized_data["updated_at"], timezone)
     return success_response('record_fetched', status.HTTP_200_OK, serialized_data)
@@ -69,7 +71,6 @@ def get_lead_source(request, pk=None):
 def store_lead_source(request):
     data = request.data.copy()
     data['business_id'] = data.get('auth_business_id')
-    data['encrypted_business_id'] = encrypt_business_id(data['business_id'])
     serializer = SourceSerializer(data=data)
     if not serializer.is_valid():
         return error_response('record_store_failed', status.HTTP_422_UNPROCESSABLE_ENTITY, serializer.errors)
