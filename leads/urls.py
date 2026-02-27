@@ -42,7 +42,8 @@ from .views.stageViews import (
     get_lead_stage, 
     store_lead_stage, 
     update_lead_stage, 
-    delete_lead_stage
+    delete_lead_stage,
+    create_default_stages
 )
 from .views.dashboardViews import (
     get_leads_summary, 
@@ -136,6 +137,8 @@ urlpatterns = [
     path('lead/stages/store', store_lead_stage),
     path('lead/stages/<uuid:pk>/update', update_lead_stage),
     path('lead/stages/<uuid:pk>/delete', delete_lead_stage),
+    path('lead/stages/create/default', create_default_stages),
+
 
     path('lead/stages/reasons/list', get_stage_reasons),
     path('lead/stages/reasons/<uuid:pk>/get', get_stage_reason),
@@ -240,7 +243,6 @@ urlpatterns = [
     # path('lead/stages/<uuid:pk>/', StageView.as_view()),
     # path('lead/stages', StageView.as_view()),
     # path('lead/stages/status/update/<uuid:pk>/', change_stage_status),
-    # path('lead/stages/create/default', create_default_stages),
 
 
     # path('lead/tags/<uuid:pk>/', TagView.as_view()),
