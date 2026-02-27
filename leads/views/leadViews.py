@@ -8,7 +8,7 @@ from django.db import IntegrityError
 from rest_framework.decorators import api_view
 from django.shortcuts import get_object_or_404
 from core.utils.helpers import check_if_user_is_staff
-from leads.utils.lead_utils import handle_email_trigger, get_default_lead_stage, get_default_lead_stage_by_priority, generate_unique_code
+from leads.utils.lead_utils import handle_email_trigger, get_default_lead_stage, get_default_lead_stage_by_priority, generate_unique_code, decrypt_business_id
 from core.utils.pagination_utils import CustomPagination
 from django.db.models import Q, Case, When, IntegerField
 from core.utils.decorators import access_control_middleware
@@ -373,6 +373,44 @@ def get_leads_kanban(request, stage_id=None):
             }
         })
     return success_response('record_fetched', status.HTTP_200_OK, grouped_leads)
+
+
+@api_view(['POST'])
+def generate_leads(request):
+    data = request.data.copy()
+    business_id = data.get('encrypted_business_id')
+    source = data.get('source')
+
+    business_id = decrypt_business_id(business_id)
+    source = Source.objects.filter(name__iexact=source, business_id=business_id).first()
+    if not source:
+        return error_response('source_not_found', status.HTTP_404_NOT_FOUND)
+    
+    data["source"] = source.id
+    
+    # ✅ Single optimized stage fetch
+    default_stage = (get_default_lead_stage(business_id) or get_default_lead_stage_by_priority(business_id))
+    if not default_stage:
+        return error_response('default_stage_missing', status.HTTP_422_UNPROCESSABLE_ENTITY)
+    
+    data["stage"] = default_stage.id
+
+    # ✅ Validate Contact BEFORE transaction
+    contact_serializer = ContactSerializer(data=data)
+    if not contact_serializer.is_valid():
+        return error_response('record_store_failed', status.HTTP_422_UNPROCESSABLE_ENTITY, contact_serializer.errors)
+    
+    with transaction.atomic():
+        contact = contact_serializer.save()
+        leads_payload = prepare_leads_to_store({**data, "contact": contact.id})
+        lead_serializer = LeadStoreSerializer(data=leads_payload, many=True)
+        if not lead_serializer.is_valid():
+            return error_response('record_store_failed', status.HTTP_422_UNPROCESSABLE_ENTITY, lead_serializer.errors)
+
+        lead_serializer.save()
+
+    return success_response('record_stored', status.HTTP_201_CREATED, lead_serializer.data)
+
 
 # # Import Leads Function
 # @api_view(['POST'])

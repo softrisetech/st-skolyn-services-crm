@@ -171,7 +171,7 @@ class Lead(BaseBusinessModel):
     contact = models.ForeignKey('Contact', on_delete=models.CASCADE, null=True, blank=True, db_index=True)
     campaign = models.ForeignKey('Campaign', on_delete=models.CASCADE, null=True, blank=True, db_index=True)
     code = models.CharField(max_length=CHAR_LENGTH)
-    created_by = models.UUIDField(db_index=True)
+    created_by = models.UUIDField(db_index=True, null=True, blank=True)
     assigned_to = models.UUIDField(null=True, blank=True, db_index=True)
     country_id = models.UUIDField(null=True, blank=True, db_index=True)
     state_id = models.UUIDField(null=True, blank=True, db_index=True)
