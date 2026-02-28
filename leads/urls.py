@@ -64,7 +64,8 @@ from .views.leadViews import (
     delete_lead, 
     change_stage, 
     delete_attachment,
-    generate_leads
+    generate_leads,
+    export_leads
 )
 from .views.stageReasonViews import (
     get_stage_reasons, 
@@ -108,6 +109,8 @@ from .views.preRequisiteViews import (
     delete_lead_pre_requisite
 )
 
+from .reports.crm_reports import *
+
 urlpatterns = [
 
     path('dashboard/leads/summary', get_leads_summary),
@@ -118,6 +121,12 @@ urlpatterns = [
     path('dashboard/assigned/leads', get_assigned_leads),
     path('dashboard/lost/reason/leads', get_lost_leads_by_reason),
     path('dashboard/leads/conversion/trend', get_leads_conversion_trend),
+    
+    path('reports/high-priority-no-followup', get_high_priority_no_followup_leads),
+    path('reports/no-followup-leads', get_no_followup_leads),
+    path('reports/upcoming-followups', get_upcoming_followup_leads),
+    path('reports/overdue-followups', get_overdue_followup_leads),
+    path('reports/lost-leads', get_lost_leads),
 
 
     path('lead/mediums/list', get_lead_mediums),
@@ -178,6 +187,7 @@ urlpatterns = [
     path('lead/teams/<uuid:pk>/delete', delete_lead_team),
 
     path('leads/list', get_leads),
+    path('leads/export/', export_leads, name='lead-export'),
     path('leads/<uuid:pk>/get', get_lead),
     path('leads/store', store_lead),
     path('leads/<uuid:pk>/update', update_lead),
@@ -193,6 +203,7 @@ urlpatterns = [
     path('lead/<uuid:lead_id>/follow-ups/store', store_lead_follow_up),
     path('lead/<uuid:lead_id>/follow-ups/<uuid:pk>/update', update_lead_follow_up),
     path('lead/<uuid:lead_id>/follow-ups/<uuid:pk>/delete', delete_lead_follow_up),
+    
 
     path('lead/<uuid:lead_id>/pre-requisites/list', get_lead_pre_requisites),
     path('lead/<uuid:lead_id>/pre-requisites/store', store_lead_pre_requisite),
