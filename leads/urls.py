@@ -7,13 +7,22 @@ from .views.sourceViews import get_lead_sources, get_lead_source, store_lead_sou
 from .views.followUpTypeViews import get_lead_follow_up_types, get_lead_follow_up_type, store_lead_follow_up_type, update_lead_follow_up_type, delete_lead_follow_up_type
 from .views.stageViews import get_lead_stages, get_lead_stage, store_lead_stage, update_lead_stage, delete_lead_stage
 from .views.dashboardViews import leads_by_source, leads_by_medium, leads_by_stage, funnel_stages, leads_by_tag, leads_by_branch, leads_by_session, monthly_leads
-from .views.leadViews import get_leads, store_lead, get_lead, update_lead, delete_lead, change_stage, delete_attachment
+from .views.leadViews import get_leads, store_lead, get_lead, update_lead, delete_lead, change_stage, delete_attachment,export_leads
 from .views.stageReasonViews import get_stage_reasons, get_stage_reason, store_stage_reason, update_stage_reason, delete_stage_reason
 from .views.campaignViews import get_lead_campaigns, get_lead_campaign, store_lead_campaign, update_lead_campaign, delete_lead_campaign
 from .views.teamViews import get_lead_teams, get_lead_team, store_lead_team, update_lead_team, delete_lead_team
-
+from .reports.crm_reports import *
 urlpatterns = [
-
+    
+    # Reports
+    
+    path('reports/high-priority-no-followup', get_high_priority_no_followup_leads),
+    path('reports/no-followup-leads', get_no_followup_leads),
+    path('reports/upcoming-followups', get_upcoming_followup_leads),
+    path('reports/overdue-followups', get_overdue_followup_leads),
+    path('reports/lost-leads', get_lost_leads),
+    
+    
     path('lead/mediums/list', get_lead_mediums),
     path('lead/mediums/<uuid:pk>/get', get_lead_medium),
     path('lead/mediums/store', store_lead_medium),
@@ -64,6 +73,7 @@ urlpatterns = [
     path('lead/teams/<uuid:pk>/delete', delete_lead_team),
 
     path('leads/list', get_leads),
+    path('leads/export/', export_leads, name='lead-export'),
     path('leads/<uuid:pk>/get', get_lead),
     path('leads/store', store_lead),
     path('leads/<uuid:pk>/update', update_lead),
@@ -76,6 +86,7 @@ urlpatterns = [
     path('lead/<uuid:lead_id>/follow-ups/store', store_lead_follow_up),
     path('lead/<uuid:lead_id>/follow-ups/<uuid:pk>/update', update_lead_follow_up),
     path('lead/<uuid:lead_id>/follow-ups/<uuid:pk>/delete', delete_lead_follow_up),
+    
 
 
     # path('leads/', lead_list),

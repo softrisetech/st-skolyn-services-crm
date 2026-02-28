@@ -23,7 +23,8 @@ from core.utils.model_helpers import lead_default_stage, tracking_object, verify
 from access_control.utils.permission_constants import LEAD_VIEW_ALL, LEAD_BRANCH_WISE, LEAD_MODIFY_ALL
 from leads.utils.filters import filter_by_sort_order, filter_by_campaigns, filter_by_teams, filter_by_priority, filter_by_countries, filter_by_states, filter_by_cities, lead_search_filter, filter_by_date_range, filter_by_branches, filter_by_created_by, filter_by_assigned_to, filter_by_mediums, filter_by_generated, filter_by_sessions, filter_by_sources, filter_by_stages, filter_by_tags
 from core.utils.helpers import has_active_child_references
-
+from report_export.utils.constants import constants
+from report_export.utils.export_helpers import export_entry, export_obj
 
 def __queryset(business_id):
     return Lead.objects.filter(business_id=business_id)
@@ -71,6 +72,19 @@ def get_leads(request):
 
     response_data = paginator.get_paginated_response(serialized_data)
     return success_response('record_fetched', status.HTTP_200_OK, response_data)
+
+@api_view(['POST'])
+@access_control_middleware
+def export_leads(request):
+    data = request.data.copy()
+    try:
+        data["report_type"] = constants()["report_type"]["crm"]["leads"]
+        entry = asyncio.run(export_entry(data))
+        data["export_entry_id"] = entry.id
+        result = export_obj(data["report_type"], data)
+        return success_response('record_fetched', status.HTTP_200_OK, result)
+    except Exception as e:
+        return error_response(str(e), status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(['POST'])

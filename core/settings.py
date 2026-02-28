@@ -47,7 +47,8 @@ INSTALLED_APPS = [
 
 MODULAR_APPS = [
     'access_control',
-    'leads'
+    'leads',
+    'report_export',
 ]
 
 INSTALLED_APPS = SYSTEM_APPS + INSTALLED_APPS + MODULAR_APPS
