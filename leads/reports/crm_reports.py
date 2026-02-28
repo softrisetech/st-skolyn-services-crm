@@ -53,7 +53,7 @@ def get_high_priority_no_followup_leads(request):
         lead=OuterRef('pk'),
         date_time__gte=threshold
     )
-    queryset = __queryset(business_id).filter(
+    queryset = __queryset(data, business_id).filter(
         priority=1,
     ).exclude(
         stage__type__in=['won', 'lost']
@@ -90,7 +90,7 @@ def get_no_followup_leads(request):
         lead=OuterRef('pk'),
     )
 
-    queryset = __queryset(business_id).exclude(
+    queryset = __queryset(data, business_id).exclude(
         stage__type__in=['won', 'lost']
     ).filter(
         ~Q(id__in=Subquery(has_followup.values('lead_id')))
@@ -126,7 +126,7 @@ def get_upcoming_followup_leads(request):
         is_done=False,
     )
 
-    queryset = __queryset(business_id).exclude(
+    queryset = __queryset(data, business_id).exclude(
         stage__type__in=['won', 'lost']
     ).filter(
         Q(id__in=Subquery(upcoming_followups.values('lead_id')))
@@ -165,7 +165,7 @@ def get_overdue_followup_leads(request):
         is_done=False,
     )
 
-    queryset = __queryset(business_id).exclude(
+    queryset = __queryset(data, business_id).exclude(
         stage__type__in=['won', 'lost']
     ).filter(
         Q(id__in=Subquery(overdue_followups.values('lead_id')))
@@ -195,7 +195,7 @@ def get_lost_leads(request):
     business_id = data.get('auth_business_id')
     userTimezone = data.get("auth_timezone")
 
-    queryset = __queryset(business_id).filter(
+    queryset = __queryset(data, business_id).filter(
         stage__type='lost',
     ).select_related(
         'stage', 'medium', 'source', 'tag', 'team', 'campaign', 'contact',

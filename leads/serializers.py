@@ -1,6 +1,6 @@
 from rest_framework import serializers
-from core.constants.model_constants import STAGE, BRANCH, MEDIUM, TAG, SOURCE
-from .models import Attachment, Lead, FollowUp, Medium, Source, Stage, StageReason, Tag, Campaign, Tracking, FollowUpType, Team, TeamMember, Contact
+from core.constants.model_constants import STAGE, TEAM, MEDIUM, TAG, SOURCE, CAMPAIGN
+from .models import PreRequisite, PreRequisiteCourse, Institute, Attachment, Lead, FollowUp, Medium, Source, Stage, StageReason, Tag, Campaign, Tracking, FollowUpType, Team, TeamMember, Contact
 
 NAME_ALREADY_EXISTS = "The name already exists"
 
@@ -9,8 +9,8 @@ class ContactSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contact
         fields = [
-            "id", "father_first_name", "father_last_name", "father_contact_number", "father_email", "father_nic", "is_father_applicable",
-            "mother_first_name", "mother_last_name", "mother_contact_number", "mother_email", "mother_nic", "is_mother_applicable"
+            "id", "business_id", "father_first_name", "father_last_name", "father_contact_number", "father_email", "father_nic", "is_father_applicable",
+            "mother_first_name", "mother_last_name", "mother_contact_number", "mother_email", "mother_nic", "is_mother_applicable", "created_at", "updated_at"
         ]
 
 class AttachmentSerializer(serializers.ModelSerializer):
@@ -29,7 +29,7 @@ class LeadListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lead
         fields = [
-                    "id", "business_id", "branch_id", "session_id", "medium", "medium_name", "source", "source_name", "stage", "stage_name", "tag", "tag_name", "team", "team_name", "campaign", "campaign_name", "contact", "code", "created_by", "assigned_to", "country_id",
+                    "id", "business_id", "branch_id", "session_id", "class_id", "medium", "medium_name", "source", "source_name", "stage", "stage_name", "tag", "tag_name", "team", "team_name", "campaign", "campaign_name", "contact", "code", "created_by", "assigned_to", "country_id",
                     "state_id", "city_id", "first_name", "last_name", "priority", "date_of_birth", "contact_number",
                     "email", "nic", "gender", "ethnicity", "remarks", "is_imported", "imported_at", "created_at", "updated_at"
                 ]
@@ -46,7 +46,7 @@ class LeadGetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lead
         fields = [
-                    "id", "business_id", "branch_id", "session_id", "medium", "medium_name", "source", "source_name", "stage", "stage_name", "tag", "tag_name", "team", "team_name", "campaign", "campaign_name", "contact", "code", "created_by", "assigned_to", "country_id",
+                    "id", "business_id", "branch_id", "session_id", "class_id", "medium", "medium_name", "source", "source_name", "stage", "stage_name", "tag", "tag_name", "team", "team_name", "campaign", "campaign_name", "contact", "code", "created_by", "assigned_to", "country_id",
                     "state_id", "city_id", "first_name", "last_name", "priority", "date_of_birth", "contact_number",
                     "email", "nic", "gender", "ethnicity", "remarks", "is_imported", "imported_at", "created_at", "updated_at", "attachments"
                 ]
@@ -59,7 +59,7 @@ class LeadStoreSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lead
         fields = [
-                    "id", "business_id", "branch_id", "session_id", "medium", "source", "stage", "tag", "team", "campaign", "contact", "code", "created_by", "assigned_to", "country_id",
+                    "id", "business_id", "branch_id", "session_id", "class_id", "medium", "source", "stage", "tag", "team", "campaign", "contact", "code", "created_by", "assigned_to", "country_id",
                     "state_id", "city_id", "first_name", "last_name", "priority", "date_of_birth", "contact_number",
                     "email", "nic", "gender", "ethnicity", "remarks", "is_imported", "imported_at", "created_at", "updated_at"
                 ]
@@ -87,15 +87,11 @@ class LeadStoreSerializer(serializers.ModelSerializer):
     #     return attachments if attachments else []
 
 
-class StageLeadSerializer(serializers.ModelSerializer):
-    source_name = serializers.SerializerMethodField()
+class KanbanLeadSerializer(serializers.ModelSerializer):
+    source_name = serializers.CharField(source="source.name", read_only=True)
     class Meta:
         model = Lead
-        fields = ['id', 'business_id', 'source_name', 'name', 'previous_education', 'priority', 'session_id', 'branch_id', 'assigned_to']
-
-    def get_source_name(self, obj):
-        source = obj.get_source()
-        return source.name if source else None
+        fields = ['id', 'business_id', 'source_name', 'first_name', 'last_name', 'priority', 'session_id', 'branch_id', 'assigned_to']
 
 
 class FollowUpSerializer(serializers.ModelSerializer):
@@ -104,6 +100,19 @@ class FollowUpSerializer(serializers.ModelSerializer):
     class Meta:
         model = FollowUp
         fields = ["id", "business_id", "lead", "follow_up_type", "follow_type_name", "created_by", "date_time", "description", "is_done", "created_at", "updated_at"]
+
+class PreRequisiteCourseSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = PreRequisiteCourse
+        fields = ['id', 'business_id', 'lead', 'prerequisite', 'course_name', 'max_marks', 'passing_marks', 'marks_in_percentage', 'is_mandatory']
+
+class PreRequisiteSerializer(serializers.ModelSerializer):
+    courses = PreRequisiteCourseSerializer(many=True, read_only=True)
+    institute_name = serializers.CharField(source="institute.name", read_only=True)
+    class Meta:
+        model = PreRequisite
+        fields = ["id", "business_id", "lead", "institute", "institute_name", "board_name", "code", "program", "courses", "created_at", "updated_at"]
+
 
 class MediumSerializer(serializers.ModelSerializer):
     class Meta:
@@ -217,6 +226,28 @@ class TagSerializer(serializers.ModelSerializer):
         return data
     
 
+class InstituteSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Institute
+        fields = ['id', 'business_id', 'name', 'is_active', 'created_at', 'updated_at']
+
+    def validate(self, data):
+        errors = {}
+        name = data.get('name')
+        business_id = data.get('business_id')
+
+        if self.instance:
+            if Institute.objects.filter(name=name, business_id=business_id).exclude(id=self.instance.id).exists():
+                errors["name"] = [NAME_ALREADY_EXISTS]
+        else:
+            if Institute.objects.filter(name=name, business_id=business_id).exists():
+                errors["name"] = [NAME_ALREADY_EXISTS]
+
+        if errors:
+            raise serializers.ValidationError(errors)
+
+        return data
+
 
 class CampaignSerializer(serializers.ModelSerializer):
     class Meta:
@@ -240,16 +271,21 @@ class CampaignSerializer(serializers.ModelSerializer):
 
         return data
     
+
+class DashboardCampaignSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Campaign
+        fields = ['id', 'name', 'is_active', 'created_at', 'updated_at']
+    
     
 class TrackingSerializer(serializers.ModelSerializer):
     created_at = serializers.DateTimeField(format='%Y-%m-%d %H:%M:%S', read_only=True)
     name = serializers.SerializerMethodField()
-    model_name = serializers.SerializerMethodField()
 
     class Meta:
         model = Tracking
         fields = [
-            'id', 'business_id', 'lead_id', 'model_id', 'model_type', 'model_name', 'name', 'created_at', 'user_id'
+            'id', 'business_id', 'lead_id', 'model_id', 'model_type', 'name', 'created_at', 'user_id'
         ]
 
     def get_name(self, obj):
@@ -261,20 +297,10 @@ class TrackingSerializer(serializers.ModelSerializer):
             return obj.get_medium().name
         elif obj.model_type == TAG:
             return obj.get_tag().name
-        else:
-            return ""
-
-    def get_model_name(self, obj):
-        if obj.model_type == STAGE:
-            return "Stage"
-        elif obj.model_type == SOURCE:
-            return "Source"
-        elif obj.model_type == MEDIUM:
-            return "Medium"
-        elif obj.model_type == TAG:
-            return "Tag"
-        elif obj.model_type == BRANCH:
-            return "Branch"
+        elif obj.model_type == TEAM:
+            return obj.get_team().name
+        elif obj.model_type == CAMPAIGN:
+            return obj.get_campaign().name
         else:
             return ""
 

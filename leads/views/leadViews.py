@@ -8,7 +8,7 @@ from django.db import IntegrityError
 from rest_framework.decorators import api_view
 from django.shortcuts import get_object_or_404
 from core.utils.helpers import check_if_user_is_staff
-from leads.utils.lead_utils import handle_email_trigger, get_default_lead_stage, get_default_lead_stage_by_priority, generate_unique_code
+from leads.utils.lead_utils import handle_email_trigger, get_default_lead_stage, get_default_lead_stage_by_priority, generate_unique_code, decrypt_business_id
 from core.utils.pagination_utils import CustomPagination
 from django.db.models import Q, Case, When, IntegerField
 from core.utils.decorators import access_control_middleware
@@ -16,24 +16,46 @@ from core.utils.date_time_converter import DateTimeConverter
 from core.utils.response_utils import success_response, error_response
 from core.utils.notification_utils import notification, notification_obj
 from core.constants.model_constants import STAGE, MEDIUM, SOURCE, TAG, BRANCH, SESSION, ASSIGNED_TO, TEAM, CAMPAIGN
-from ..serializers import LeadListSerializer, LeadStoreSerializer, LeadGetSerializer, StageLeadSerializer, LeadImportSerializer, ContactSerializer
+from ..serializers import LeadListSerializer, LeadStoreSerializer, LeadGetSerializer, KanbanLeadSerializer, LeadImportSerializer, ContactSerializer
 from access_control.utils.permission_helpers import view_branch_wise, view_modify_all
 from ..models import Lead, Stage, Source, Medium, Attachment, Tracking, Tag, StageReason, Team, Campaign, StageReasonEntry
 from core.utils.model_helpers import lead_default_stage, tracking_object, verify_lead_missing_fields
 from access_control.utils.permission_constants import LEAD_VIEW_ALL, LEAD_BRANCH_WISE, LEAD_MODIFY_ALL
-from leads.utils.filters import filter_by_sort_order, filter_by_campaigns, filter_by_teams, filter_by_priority, filter_by_countries, filter_by_states, filter_by_cities, lead_search_filter, filter_by_date_range, filter_by_branches, filter_by_created_by, filter_by_assigned_to, filter_by_mediums, filter_by_generated, filter_by_sessions, filter_by_sources, filter_by_stages, filter_by_tags
+from leads.utils.filters import filter_by_classes, filter_by_sort_order, filter_by_campaigns, filter_by_teams, filter_by_priority, filter_by_countries, filter_by_states, filter_by_cities, lead_search_filter, filter_by_date_range, filter_by_branches, filter_by_created_by, filter_by_assigned_to, filter_by_mediums, filter_by_sessions, filter_by_sources, filter_by_stages, filter_by_tags
 from core.utils.helpers import has_active_child_references
 from report_export.utils.constants import constants
 from report_export.utils.export_helpers import export_entry, export_obj
 
-def __queryset(business_id):
-    return Lead.objects.filter(business_id=business_id)
+def __queryset(data, business_id):
+    filters = {"business_id": business_id}
+    is_staff = check_if_user_is_staff(data)
+    if is_staff == "true":
+        user_id = data.get('auth_id')
+        role_id = data.get('auth_role_id')
+        view_all = LEAD_VIEW_ALL
+        branch_wise = LEAD_BRANCH_WISE
+        have_view_all_permission = view_modify_all(user_id, role_id, view_all)
+        have_branch_wise_permission = view_branch_wise(user_id, role_id, branch_wise)
+        queryset = Lead.objects.filter(**filters)
+
+        if not have_view_all_permission:
+            # Add OR condition: created_by=user_id OR assigned_to=user_id
+            queryset = queryset.filter(Q(created_by=user_id) | Q(assigned_to=user_id))
+
+        if have_branch_wise_permission:
+            branch_id = data.get("auth_branch_id")
+            queryset = queryset.filter(branch_id=branch_id)
+
+        return queryset
+
+    return Lead.objects.filter(**filters)
 
 
 def __apply_filters(queryset, filters):
     queryset = lead_search_filter(queryset, filters)
     queryset = filter_by_branches(queryset, filters)
     queryset = filter_by_sessions(queryset, filters)
+    queryset = filter_by_classes(queryset, filters)
     queryset = filter_by_created_by(queryset, filters)
     queryset = filter_by_assigned_to(queryset, filters)
     queryset = filter_by_countries(queryset, filters)
@@ -58,7 +80,7 @@ def get_leads(request):
     data = request.data
     business_id = data.get('auth_business_id')
     userTimezone = data.get("auth_timezone")
-    queryset = __queryset(business_id)
+    queryset = __queryset(data, business_id)
     queryset = __apply_filters(queryset, data)
     paginator = CustomPagination()
     paginated_queryset = paginator.paginate_queryset(queryset, request)
@@ -134,7 +156,7 @@ def get_lead(request, pk):
     data = request.data
     business_id = data.get('auth_business_id')
     userTimezone = data.get("auth_timezone")
-    queryset = __queryset(business_id)
+    queryset = __queryset(data, business_id)
     lead = queryset.filter(id=pk).first()
     serialized_data = LeadGetSerializer(lead).data
 
@@ -156,8 +178,8 @@ def update_lead(request, pk):
     role_id = data.get('auth_role_id')
     is_staff = check_if_user_is_staff(data)
 
-    quertset = __queryset(business_id)
-    lead = quertset.filter(id=pk).first()
+    queryset = __queryset(data, business_id)
+    lead = queryset.filter(id=pk).first()
     if not lead:
         return error_response('lead_not_found', status.HTTP_404_NOT_FOUND)
     old_lead_data = copy.deepcopy(lead) 
@@ -205,7 +227,7 @@ def delete_lead(request, pk):
     role_id = data.get('auth_role_id')
     is_staff = check_if_user_is_staff(data)
 
-    queryset = __queryset(business_id)
+    queryset = __queryset(data, business_id)
     lead = queryset.filter(id=pk).first()
     if not lead:
         return error_response('lead_not_found', status.HTTP_404_NOT_FOUND)
@@ -237,7 +259,7 @@ def change_stage(request, pk):
     role_id = data.get('auth_role_id')
     is_staff = check_if_user_is_staff(data)
 
-    queryset = __queryset(business_id)
+    queryset = __queryset(data, business_id)
     lead = queryset.filter(id=pk).first()
     if not lead:
         return error_response('lead_not_found', status.HTTP_404_NOT_FOUND)
@@ -304,6 +326,105 @@ def delete_attachment(request, lead_id, pk):
         return success_response('record_deleted', status.HTTP_200_OK)
     except Attachment.DoesNotExist:
         return error_response('lead_attachment_not_found', status.HTTP_404_NOT_FOUND)
+    
+
+@api_view(['POST'])
+@access_control_middleware
+def get_leads_kanban(request, stage_id=None):
+    data = request.data
+    business_id = data.get('auth_business_id')
+    queryset = __queryset(data, business_id)
+    #Get pagination params
+    page = int(request.query_params.get('page', 1))
+    page_size = int(request.query_params.get('page_size', 20))
+    skip = (page - 1) * page_size
+    take = skip + page_size
+
+    if stage_id:
+        stage_leads = queryset.filter(stage=stage_id)[skip:take]
+        serialized_data = KanbanLeadSerializer(stage_leads, many=True).data
+        data = {
+                "items": serialized_data,
+                "pagination": {
+                "page": page,
+                "page_size": page_size,
+                "all_items_count": queryset.filter(stage=stage_id).count(),
+                "total_pages": math.ceil(queryset.filter(stage=stage_id).count()/page_size),
+                "remaining_items_count": max(queryset.filter(stage=stage_id).count() - (page_size * page), 0)
+            }
+        }
+        return success_response('record_fetched', status.HTTP_200_OK, data)
+
+    queryset = __apply_filters(queryset, data)
+    stages = Stage.objects.filter(business_id=business_id, is_active=1).order_by(
+        Case(
+            When(type="open", then=0),
+            When(type="won", then=1),
+            When(type="lost", then=2),
+            default=3,
+            output_field=IntegerField(),
+        ),
+        "priority"
+    )
+
+    grouped_leads = {"stages": []}
+    for stage in stages:
+        stage_leads = queryset.filter(stage=stage.id)[skip:take]  # Apply Skip-Take (Offset-Limit)
+        serialized_data = KanbanLeadSerializer(stage_leads, many=True).data
+        total_items = queryset.filter(stage=stage.id).count()
+
+        grouped_leads["stages"].append({  # Append each stage's data to the list
+            "id": stage.id,
+            "name": stage.name,
+            "type": stage.type,
+            "items": serialized_data,
+            "pagination": {
+                "page": page,
+                "page_size": page_size,
+                "all_items_count": total_items,
+                "total_pages": math.ceil(total_items / page_size),
+                "remaining_items_count": max(total_items - skip - page_size, 0)
+            }
+        })
+    return success_response('record_fetched', status.HTTP_200_OK, grouped_leads)
+
+
+@api_view(['POST'])
+def generate_leads(request):
+    data = request.data.copy()
+    business_id = data.get('encrypted_business_id')
+    source = data.get('source')
+
+    business_id = decrypt_business_id(business_id)
+    source = Source.objects.filter(name__iexact=source, business_id=business_id).first()
+    if not source:
+        return error_response('source_not_found', status.HTTP_404_NOT_FOUND)
+    
+    data["source"] = source.id
+    
+    # ✅ Single optimized stage fetch
+    default_stage = (get_default_lead_stage(business_id) or get_default_lead_stage_by_priority(business_id))
+    if not default_stage:
+        return error_response('default_stage_missing', status.HTTP_422_UNPROCESSABLE_ENTITY)
+    
+    data["stage"] = default_stage.id
+
+    # ✅ Validate Contact BEFORE transaction
+    contact_serializer = ContactSerializer(data=data)
+    if not contact_serializer.is_valid():
+        return error_response('record_store_failed', status.HTTP_422_UNPROCESSABLE_ENTITY, contact_serializer.errors)
+    
+    with transaction.atomic():
+        contact = contact_serializer.save()
+        leads_payload = prepare_leads_to_store({**data, "contact": contact.id})
+        lead_serializer = LeadStoreSerializer(data=leads_payload, many=True)
+        if not lead_serializer.is_valid():
+            return error_response('record_store_failed', status.HTTP_422_UNPROCESSABLE_ENTITY, lead_serializer.errors)
+
+        lead_serializer.save()
+
+    return success_response('record_stored', status.HTTP_201_CREATED, lead_serializer.data)
+
 
 # # Import Leads Function
 # @api_view(['POST'])

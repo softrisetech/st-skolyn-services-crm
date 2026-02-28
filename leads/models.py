@@ -161,6 +161,7 @@ class Contact(BaseBusinessModel):
 class Lead(BaseBusinessModel):
     branch_id = models.UUIDField(db_index=True)
     session_id = models.UUIDField(null=True, blank=True, db_index=True)
+    class_id = models.UUIDField(null=True, blank=True, db_index=True)
     medium = models.ForeignKey('Medium', on_delete=models.CASCADE, null=True, blank=True, db_index=True)
     source = models.ForeignKey('Source', on_delete=models.CASCADE, null=True, blank=True, db_index=True)
     tag = models.ForeignKey('Tag', on_delete=models.CASCADE, null=True, blank=True, db_index=True)
@@ -169,7 +170,7 @@ class Lead(BaseBusinessModel):
     contact = models.ForeignKey('Contact', on_delete=models.CASCADE, null=True, blank=True, db_index=True)
     campaign = models.ForeignKey('Campaign', on_delete=models.CASCADE, null=True, blank=True, db_index=True)
     code = models.CharField(max_length=CHAR_LENGTH)
-    created_by = models.UUIDField(db_index=True)
+    created_by = models.UUIDField(db_index=True, null=True, blank=True)
     assigned_to = models.UUIDField(null=True, blank=True, db_index=True)
     country_id = models.UUIDField(null=True, blank=True, db_index=True)
     state_id = models.UUIDField(null=True, blank=True, db_index=True)
@@ -268,6 +269,20 @@ class Tracking(BaseBusinessModel):
             return tag
         except Tag.DoesNotExist:
             return None
+        
+    def get_team(self):
+        try:
+            team = Team.objects.get(id=self.model_id)
+            return team
+        except Team.DoesNotExist:
+            return None
+        
+    def get_campaign(self):
+        try:
+            campaign = Campaign.objects.get(id=self.model_id)
+            return campaign
+        except Campaign.DoesNotExist:
+            return None
 
 
 class FollowUp(BaseBusinessModel):
@@ -298,15 +313,23 @@ class Attachment(BaseBusinessModel):
     file = models.JSONField(max_length=LONG_CHAR_LENGTH)
 
 
+class Institute(BaseBusinessModel):
+    name = models.CharField(max_length=CHAR_LENGTH)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['-updated_at']
+
 class PreRequisite(BaseBusinessModel):
-    institution_name = models.CharField(max_length=CHAR_LENGTH, null=True, blank=True)
+    lead = models.ForeignKey('Lead', on_delete=models.CASCADE, db_index=True, null=True, blank=True)
+    institute = models.ForeignKey('Institute', on_delete=models.CASCADE, db_index=True, null=True, blank=True)
     board_name = models.CharField(max_length=CHAR_LENGTH, null=True, blank=True)
     code = models.CharField(max_length=CHAR_LENGTH, null=True, blank=True)
     program = models.CharField(max_length=CHAR_LENGTH, null=True, blank=True)
     
 
 class PreRequisiteCourse(BaseBusinessModel):
-    prerequisite = models.ForeignKey('PreRequisite', on_delete=models.CASCADE, db_index=True)
+    prerequisite = models.ForeignKey('PreRequisite', on_delete=models.CASCADE, db_index=True, related_name='courses')
     lead = models.ForeignKey('Lead', on_delete=models.CASCADE, db_index=True)
     course_name = models.CharField(max_length=CHAR_LENGTH, null=True, blank=True)
     max_marks = models.IntegerField()
