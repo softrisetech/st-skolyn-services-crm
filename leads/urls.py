@@ -110,6 +110,7 @@ from .views.preRequisiteViews import (
 )
 
 from .reports.crm_reports import *
+from .reports.crm_report_exports import *
 
 urlpatterns = [
 
@@ -127,6 +128,14 @@ urlpatterns = [
     path('reports/upcoming-followups', get_upcoming_followup_leads),
     path('reports/overdue-followups', get_overdue_followup_leads),
     path('reports/lost-leads', get_lost_leads),
+    
+    # Exports
+    
+    path('reports/export/high-priority-no-followup/', export_high_priority_no_followup),
+    path('reports/export/no-followup-leads/', export_no_followup_leads),
+    path('reports/export/upcoming-followups/', export_upcoming_followup_leads),
+    path('reports/export/overdue-followups/', export_overdue_followup_leads),
+    path('reports/export/lost-leads/', export_lost_leads),
 
 
     path('lead/mediums/list', get_lead_mediums),

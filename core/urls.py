@@ -12,4 +12,5 @@ urlpatterns = [
     path('', health_check, name='health_check'),
     path('', include('access_control.urls')),
     path('', include('leads.urls')),
+    path('', include('report_export.urls')),
 ]
