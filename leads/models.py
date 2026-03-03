@@ -4,6 +4,11 @@ from core.base_models import BaseBusinessModel
 from core.constants.model_constants import CHAR_LENGTH, LONG_CHAR_LENGTH, LONG_TEXT_LENGTH, PHONE_LENGTH, EMAIL_LENGTH, DECIMAL_LENGTH, DECIMAL_PLACES_LENGTH
 
 
+class ReportConnection(models.Manager):
+    def report_connection(self):
+        # Automatically use the 'report' database connection
+        return super().using('report_connection')
+
 class Medium(BaseBusinessModel):
     name = models.CharField(max_length=CHAR_LENGTH)
     slug = AutoSlugField(populate_from='name', unique=True, blank=True, null=True, unique_with=['business_id'], always_update=True)

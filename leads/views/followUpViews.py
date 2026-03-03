@@ -12,9 +12,9 @@ from core.utils.notification_utils import notification, notification_obj
 from ..utils.filters import filter_by_created_bys, filter_by_start_and_end_date, filter_by_follow_up_types, filter_by_done
 
 
-def __queryset(business_id, lead_id):
-    return FollowUp.objects.filter(business_id=business_id, lead_id=lead_id)
-
+def __queryset(business_id, lead_id, use_report_db=False):
+    db_alias = 'report_connection' if use_report_db else 'default'
+    return FollowUp.objects.using(db_alias).filter(business_id=business_id, lead_id=lead_id)
 
 def __apply_filters(queryset, filters):
     queryset = filter_by_created_bys(queryset, filters)
