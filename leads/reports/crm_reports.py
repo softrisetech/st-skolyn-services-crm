@@ -17,6 +17,8 @@ from leads.utils.filters import (
 from report_export.utils.constants import constants
 from report_export.utils.export_helpers import export_entry, export_obj
 
+from ..views.followUpViews import __queryset as __followup_queryset
+
 def __apply_filters(queryset, filters):
     queryset = lead_search_filter(queryset, filters)
     queryset = filter_by_branches(queryset, filters)
@@ -48,12 +50,10 @@ def get_high_priority_no_followup_leads(request):
 
     threshold = timezone.now() - timezone.timedelta(hours=48)
 
-    recent_followups = FollowUp.objects.filter(
-        business_id=business_id,
-        lead=OuterRef('pk'),
+    recent_followups = __followup_queryset(business_id, OuterRef('pk'), use_report_db=True).filter(
         date_time__gte=threshold
     )
-    queryset = __queryset(data, business_id).filter(
+    queryset = __queryset(data, business_id, use_report_db=True).filter(
         priority=1,
     ).exclude(
         stage__type__in=['won', 'lost']
@@ -85,12 +85,9 @@ def get_no_followup_leads(request):
     business_id = data.get('auth_business_id')
     userTimezone = data.get("auth_timezone")
 
-    has_followup = FollowUp.objects.filter(
-        business_id=business_id,
-        lead=OuterRef('pk'),
-    )
+    has_followup =__followup_queryset(business_id, OuterRef('pk'), use_report_db=True)
 
-    queryset = __queryset(data, business_id).exclude(
+    queryset = __queryset(data, business_id, use_report_db=True).exclude(
         stage__type__in=['won', 'lost']
     ).filter(
         ~Q(id__in=Subquery(has_followup.values('lead_id')))
@@ -119,14 +116,12 @@ def get_upcoming_followup_leads(request):
     business_id = data.get('auth_business_id')
     userTimezone = data.get("auth_timezone")
     now = timezone.now()
-    upcoming_followups = FollowUp.objects.filter(
-        business_id=business_id,
-        lead=OuterRef('pk'),
+    upcoming_followups =__followup_queryset(business_id, OuterRef('pk'), use_report_db=True).filter(
         date_time__gte=now,
         is_done=False,
     )
 
-    queryset = __queryset(data, business_id).exclude(
+    queryset = __queryset(data, business_id, use_report_db=True).exclude(
         stage__type__in=['won', 'lost']
     ).filter(
         Q(id__in=Subquery(upcoming_followups.values('lead_id')))
@@ -158,14 +153,12 @@ def get_overdue_followup_leads(request):
     
     now = timezone.now()
 
-    overdue_followups = FollowUp.objects.filter(
-        business_id=business_id,
-        lead=OuterRef('pk'),
+    overdue_followups =__followup_queryset(business_id, OuterRef('pk'), use_report_db=True).filter(
         date_time__lt=now,
         is_done=False,
     )
 
-    queryset = __queryset(data, business_id).exclude(
+    queryset = __queryset(data, business_id, use_report_db=True).exclude(
         stage__type__in=['won', 'lost']
     ).filter(
         Q(id__in=Subquery(overdue_followups.values('lead_id')))
@@ -195,7 +188,7 @@ def get_lost_leads(request):
     business_id = data.get('auth_business_id')
     userTimezone = data.get("auth_timezone")
 
-    queryset = __queryset(data, business_id).filter(
+    queryset = __queryset(data, business_id, use_report_db=True).filter(
         stage__type='lost',
     ).select_related(
         'stage', 'medium', 'source', 'tag', 'team', 'campaign', 'contact',

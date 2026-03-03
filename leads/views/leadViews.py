@@ -26,9 +26,17 @@ from core.utils.helpers import has_active_child_references
 from report_export.utils.constants import constants
 from report_export.utils.export_helpers import export_entry, export_obj
 
-def __queryset(data, business_id):
+def __queryset(data, business_id, use_report_db=False):
     filters = {"business_id": business_id}
     is_staff = check_if_user_is_staff(data)
+    
+    # Choose which DB to use
+    db_alias = 'report_connection' if use_report_db else 'default'
+    
+    print("db_alias", db_alias)
+    
+    
+    
     if is_staff == "true":
         user_id = data.get('auth_id')
         role_id = data.get('auth_role_id')
@@ -36,10 +44,9 @@ def __queryset(data, business_id):
         branch_wise = LEAD_BRANCH_WISE
         have_view_all_permission = view_modify_all(user_id, role_id, view_all)
         have_branch_wise_permission = view_branch_wise(user_id, role_id, branch_wise)
-        queryset = Lead.objects.filter(**filters)
+        queryset = Lead.objects.using(db_alias).filter(**filters)
 
         if not have_view_all_permission:
-            # Add OR condition: created_by=user_id OR assigned_to=user_id
             queryset = queryset.filter(Q(created_by=user_id) | Q(assigned_to=user_id))
 
         if have_branch_wise_permission:
@@ -48,7 +55,7 @@ def __queryset(data, business_id):
 
         return queryset
 
-    return Lead.objects.filter(**filters)
+    return Lead.objects.using(db_alias).filter(**filters)
 
 
 def __apply_filters(queryset, filters):
