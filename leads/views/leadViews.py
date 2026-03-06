@@ -31,11 +31,7 @@ def __queryset(data, business_id, use_report_db=False):
     is_staff = check_if_user_is_staff(data)
     
     # Choose which DB to use
-    db_alias = 'report_connection' if use_report_db else 'default'
-    
-    print("db_alias", db_alias)
-    
-    
+    db_alias = 'report_connection' if use_report_db else 'default'    
     
     if is_staff == "true":
         user_id = data.get('auth_id')
