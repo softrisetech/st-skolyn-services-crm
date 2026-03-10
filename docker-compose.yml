@@ -6,7 +6,7 @@ services:
       dockerfile: Dockerfile
       args:
         APP_PORT: ${APP_PORT} # Pass .env variable as build argumen
-    image: img_services_skolyn_crm
+    image: img_services_crm
     extra_hosts:
       - 'host.docker.internal:host-gateway'
     command: python manage.py runserver 0.0.0.0:8000
