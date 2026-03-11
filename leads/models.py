@@ -291,7 +291,7 @@ class Tracking(BaseBusinessModel):
 
 
 class FollowUp(BaseBusinessModel):
-    lead = models.ForeignKey('Lead', on_delete=models.CASCADE, db_index=True)
+    lead = models.ForeignKey('Lead', on_delete=models.CASCADE, db_index=True, related_name='follow_ups')
     follow_up_type = models.ForeignKey('FollowUpType', on_delete=models.CASCADE, db_index=True, null=True, blank=True, related_name='follow_up_type')
     created_by = models.UUIDField(db_index=True)
     date_time = models.DateTimeField()

@@ -6,6 +6,8 @@ from ..models import Stage
 from datetime import datetime
 from django.db import IntegrityError
 from core.utils.notification_utils import notification_obj
+from core.utils.date_time_converter import DateTimeConverter
+
 
 def handle_email_trigger(request, lead, notifications):
     if lead.p_email is not None:
@@ -58,3 +60,66 @@ def decrypt_business_id(encrypted_id):
         return base64.urlsafe_b64decode(encrypted_id.encode()).decode()
     except Exception:
         return None
+    
+def handle_lead_email_notifications(user_timezone, sender_keys, email_notifications, trigger, lead, stage_reason=None, remarks=None):
+    recipients = []
+
+    team_lead_id = get_team_lead_id(lead)
+    if "team_lead" in sender_keys and team_lead_id:
+        recipients.append(team_lead_id)
+
+    if "assigned_to" in sender_keys and lead.assigned_to:
+        recipients.append(lead.assigned_to)
+
+    parent_first_name, parent_last_name, parent_email, parent_contact_number = get_lead_parent(lead)
+    if "parent_email" in sender_keys and parent_email:
+        recipients.append(parent_email)
+
+    last_follow_up_activity = None
+    if "last_activity" in sender_keys:
+        last_follow_up_activity = get_last_follow_up_activity(lead)
+
+    email_notifications.append(notification_obj(
+        trigger,
+        recipients,
+        {
+            'business_id': lead.business_id,
+            'business_name': 'Janson co',
+            'branch_id': lead.branch_id,
+            'branch_name': 'Houston',
+            'branch_contact_number': '1234567890',
+            'class_name': 'Grade 1',
+            'student_name': lead.first_name + " " + lead.last_name,
+            'parent_name': parent_first_name + " " + parent_last_name if parent_first_name else None,
+            'parent_email': parent_email,
+            'parent_contact_number': parent_contact_number,
+            'last_activity': DateTimeConverter.from_utc_datetime(last_follow_up_activity['date_time'].isoformat(), user_timezone) if last_follow_up_activity else None,
+            'reason_type': stage_reason.name if stage_reason else None,
+            'reason': remarks
+        }
+    ))
+        
+    return email_notifications
+        
+
+def get_last_follow_up_activity(lead):
+    last_follow_up = lead.follow_ups.order_by('-created_at').first()
+    if last_follow_up:
+        return {
+            'date_time': last_follow_up.date_time,
+        }
+    return None
+
+def get_lead_parent(lead):
+    lead_contact = lead.contact
+    if lead_contact:
+        if lead_contact.is_father_applicable:
+            return lead_contact.father_first_name, lead_contact.father_last_name, lead_contact.father_email, lead_contact.father_contact_number
+        elif lead_contact.is_mother_applicable:
+            return lead_contact.mother_first_name, lead_contact.mother_last_name, lead_contact.mother_email, lead_contact.mother_contact_number
+    return None, None, None, None
+
+def get_team_lead_id(lead):
+    if lead.team and lead.team.user_id:
+        return lead.team.user_id
+    return None

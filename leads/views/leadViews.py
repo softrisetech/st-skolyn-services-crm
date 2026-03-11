@@ -1,30 +1,105 @@
 import copy
 import asyncio
-import json, math
+import math
 from django.db import transaction
 from rest_framework import status
 from django.utils import timezone
-from django.db import IntegrityError
 from rest_framework.decorators import api_view
-from django.shortcuts import get_object_or_404
+from report_export.utils.constants import constants
 from core.utils.helpers import check_if_user_is_staff
-from leads.utils.lead_utils import handle_email_trigger, get_default_lead_stage, get_default_lead_stage_by_priority, generate_unique_code, decrypt_business_id
 from core.utils.pagination_utils import CustomPagination
-from django.db.models import Q, Case, When, IntegerField
+from core.utils.helpers import has_active_child_references
 from core.utils.decorators import access_control_middleware
 from core.utils.date_time_converter import DateTimeConverter
-from core.utils.response_utils import success_response, error_response
-from core.utils.notification_utils import notification, notification_obj
-from core.constants.model_constants import STAGE, MEDIUM, SOURCE, TAG, BRANCH, SESSION, ASSIGNED_TO, TEAM, CAMPAIGN
-from ..serializers import LeadListSerializer, LeadStoreSerializer, LeadGetSerializer, KanbanLeadSerializer, LeadImportSerializer, ContactSerializer
-from access_control.utils.permission_helpers import view_branch_wise, view_modify_all
-from ..models import Lead, Stage, Source, Medium, Attachment, Tracking, Tag, StageReason, Team, Campaign, StageReasonEntry
-from core.utils.model_helpers import lead_default_stage, tracking_object, verify_lead_missing_fields
-from access_control.utils.permission_constants import LEAD_VIEW_ALL, LEAD_BRANCH_WISE, LEAD_MODIFY_ALL
-from leads.utils.filters import filter_by_classes, filter_by_sort_order, filter_by_campaigns, filter_by_teams, filter_by_priority, filter_by_countries, filter_by_states, filter_by_cities, lead_search_filter, filter_by_date_range, filter_by_branches, filter_by_created_by, filter_by_assigned_to, filter_by_mediums, filter_by_sessions, filter_by_sources, filter_by_stages, filter_by_tags
-from core.utils.helpers import has_active_child_references
-from report_export.utils.constants import constants
-from report_export.utils.export_helpers import export_entry, export_obj
+
+from leads.utils.lead_utils import (
+    get_default_lead_stage, 
+    get_default_lead_stage_by_priority, 
+    generate_unique_code, 
+    decrypt_business_id, 
+    handle_lead_email_notifications
+)
+from django.db.models import (
+    Q, 
+    Case, 
+    When, 
+    IntegerField
+)
+from core.utils.response_utils import (
+    success_response, 
+    error_response
+)
+from core.utils.notification_utils import (
+    notification, 
+    notification_obj
+)
+from core.constants.model_constants import (
+    STAGE, 
+    MEDIUM, 
+    SOURCE, 
+    TAG, 
+    BRANCH, 
+    SESSION, 
+    ASSIGNED_TO, 
+    TEAM, 
+    CAMPAIGN, 
+    LOST
+)
+from ..serializers import (
+    LeadListSerializer, 
+    LeadStoreSerializer, 
+    LeadGetSerializer, 
+    KanbanLeadSerializer, 
+    LeadImportSerializer, 
+    ContactSerializer
+)
+from access_control.utils.permission_helpers import (
+    view_branch_wise, 
+    view_modify_all
+)
+from ..models import (
+    Lead, 
+    Stage, 
+    Source, 
+    Medium, 
+    Attachment, 
+    Tracking, 
+    Tag, 
+    StageReason, 
+    Team, 
+    Campaign, 
+    StageReasonEntry, 
+    FollowUp
+)
+from access_control.utils.permission_constants import (
+    LEAD_VIEW_ALL, 
+    LEAD_BRANCH_WISE, 
+    LEAD_MODIFY_ALL
+)
+from leads.utils.filters import (
+    filter_by_classes, 
+    filter_by_sort_order, 
+    filter_by_campaigns, 
+    filter_by_teams, 
+    filter_by_priority, 
+    filter_by_countries, 
+    filter_by_states, 
+    filter_by_cities, 
+    lead_search_filter, 
+    filter_by_date_range, 
+    filter_by_branches, 
+    filter_by_created_by, 
+    filter_by_assigned_to, 
+    filter_by_mediums, 
+    filter_by_sessions, 
+    filter_by_sources, 
+    filter_by_stages, 
+    filter_by_tags
+)
+from report_export.utils.export_helpers import (
+    export_entry, 
+    export_obj
+)
 
 def __queryset(data, business_id, use_report_db=False):
     filters = {"business_id": business_id}
@@ -118,8 +193,11 @@ def store_lead(request):
     data = request.data.copy()
     auth_id = data.get('auth_id')
     business_id = data.get('auth_business_id')
+    user_timezone = data.get("auth_timezone")
     base_payload = {**data, "business_id": business_id, "created_by": auth_id}
     lookup_map = {'medium': Medium, 'source': Source, 'tag': Tag, 'team': Team, 'campaign': Campaign}
+    web_notifications, email_notifications, other = [], [], {}
+
 
     # ✅ Bulk lookup validation (reduces DB hits)
     for field, model in lookup_map.items():
@@ -151,7 +229,15 @@ def store_lead(request):
         store_leads_attachments(business_id, leads, attachments)
         store_leads_tracking(leads, auth_id)
 
-    return success_response('record_stored', status.HTTP_201_CREATED, lead_serializer.data)
+        for lead in leads:
+            email_notifications = handle_lead_email_notifications(user_timezone, ["parent_email", "team_lead"], email_notifications, "lead_created", lead)
+            email_notifications = handle_lead_email_notifications(user_timezone, ["assigned_to"], email_notifications, "lead_assigned", lead)
+
+
+        if email_notifications:
+            other['notification'] = notification(email_notifications)
+
+    return success_response('record_stored', status.HTTP_201_CREATED, lead_serializer.data, other)
 
 @api_view(['POST'])
 @access_control_middleware
@@ -180,6 +266,9 @@ def update_lead(request, pk):
     auth_id = data.get('auth_id')
     role_id = data.get('auth_role_id')
     is_staff = check_if_user_is_staff(data)
+    user_timezone = data.get("auth_timezone")
+    web_notifications, email_notifications, other = [], [], {}
+
 
     queryset = __queryset(data, business_id)
     lead = queryset.filter(id=pk).first()
@@ -218,7 +307,14 @@ def update_lead(request, pk):
         store_leads_attachments(business_id, [updated_lead], attachments)
         store_leads_tracking([updated_lead], auth_id, old_lead_data)
 
-    return success_response('record_updated', status.HTTP_200_OK, lead_serializer.data)
+        if old_lead_data.assigned_to != updated_lead.assigned_to:
+            email_notifications = handle_lead_email_notifications(user_timezone, ["assigned_to", "last_activity"], email_notifications, "lead_assigned", lead)
+
+        if email_notifications:
+            other['notification'] = notification(email_notifications)
+        
+
+    return success_response('record_updated', status.HTTP_200_OK, lead_serializer.data, other)
 
 
 @api_view(['POST'])
@@ -240,12 +336,12 @@ def delete_lead(request, pk):
         if str(lead.created_by) != str(auth_id) and not have_modify_all_permission:
             return error_response('permission_denied', status.HTTP_403_FORBIDDEN)
         
-    # child_references = [
-    #     {'model': FollowUp, 'foreign_key': 'tag_id'}
-    # ]
-    # has_refs = has_active_child_references(child_references, pk, business_id)
-    # if has_refs:
-    #     return error_response("related_tag_record_found_on_deletion", status.HTTP_400_BAD_REQUEST)
+    child_references = [
+        {'model': FollowUp, 'foreign_key': 'lead_id'}
+    ]
+    has_refs = has_active_child_references(child_references, pk, business_id)
+    if has_refs:
+        return error_response("related_tag_record_found_on_deletion", status.HTTP_400_BAD_REQUEST)
 
     lead.attachments.all().update(deleted_at=timezone.now())
     lead.trackings.all().update(deleted_at=timezone.now())
@@ -261,6 +357,9 @@ def change_stage(request, pk):
     auth_id = data.get('auth_id')
     role_id = data.get('auth_role_id')
     is_staff = check_if_user_is_staff(data)
+    remarks = data.get('remarks')
+    user_timezone = data.get("auth_timezone")
+    web_notifications, email_notifications, other = [], [], {}
 
     queryset = __queryset(data, business_id)
     lead = queryset.filter(id=pk).first()
@@ -312,10 +411,20 @@ def change_stage(request, pk):
             # Tracking
             store_leads_tracking([lead], auth_id, old_lead_data)
 
-        return success_response('lead_stage_changed', status.HTTP_200_OK)
+            template = None
+            if stage.type == LOST:
+                template = "lead_lost"
+            elif stage.type == "won":
+                template = "lead_won"
+
+            if template:
+                email_notifications = handle_lead_email_notifications(user_timezone, ["team_lead", "assigned_to", "parent_email"], email_notifications, template, lead, stage_reason, remarks)
+                other['notification'] = notification(email_notifications)
+
+        return success_response('lead_stage_changed', status.HTTP_200_OK, [], other)
 
     except Exception as e:
-        return error_response("lead_stage_change_failed", status.HTTP_500_INTERNAL_SERVER_ERROR)
+        return error_response("lead_stage_change_failed", status.HTTP_500_INTERNAL_SERVER_ERROR, str(e))
     
 
 @api_view(['POST'])

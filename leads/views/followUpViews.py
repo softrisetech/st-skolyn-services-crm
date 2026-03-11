@@ -1,16 +1,14 @@
 from rest_framework import status
 from ..serializers import FollowUpSerializer
-from rest_framework.decorators import APIView
-from ..models import FollowUp, Lead, FollowUpType
-from django.utils.decorators import method_decorator
 from rest_framework.decorators import api_view
+from ..models import FollowUp, Lead, FollowUpType
 from core.utils.pagination_utils import CustomPagination
 from core.utils.decorators import access_control_middleware
 from core.utils.date_time_converter import DateTimeConverter
 from core.utils.response_utils import success_response, error_response
 from core.utils.notification_utils import notification, notification_obj
 from ..utils.filters import filter_by_created_bys, filter_by_start_and_end_date, filter_by_follow_up_types, filter_by_done
-
+from ..utils.lead_utils import handle_lead_email_notifications
 
 def __queryset(business_id, lead_id, use_report_db=False):
     db_alias = 'report_connection' if use_report_db else 'default'
@@ -68,6 +66,8 @@ def store_lead_follow_up(request, lead_id):
     data['business_id'] = request.data.get('auth_business_id')
     data['created_by'] = request.data.get('auth_id')
     data['follow_up_type'] = request.data.get('follow_up_type')
+    user_timezone = data.get("auth_timezone")
+    web_notifications, email_notifications, other = [], [], {}
 
     follow_up_type = FollowUpType.objects.filter(id=data['follow_up_type'], business_id=data['business_id']).first()
     if not follow_up_type:
@@ -83,7 +83,10 @@ def store_lead_follow_up(request, lead_id):
         return error_response('record_store_failed', status.HTTP_422_UNPROCESSABLE_ENTITY, serializer.errors)
 
     serializer.save()
-    return success_response('record_stored', status.HTTP_201_CREATED, serializer.data)
+
+    email_notifications = handle_lead_email_notifications(user_timezone, ["assigned_to", "parent_email"], email_notifications, "follow_up_created", lead)
+    other['notification'] = notification(email_notifications)
+    return success_response('record_stored', status.HTTP_201_CREATED, serializer.data, other)
 
 @api_view(['POST'])
 @access_control_middleware
