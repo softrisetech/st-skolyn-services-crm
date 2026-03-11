@@ -419,7 +419,9 @@ def change_stage(request, pk):
 
             if template:
                 email_notifications = handle_lead_email_notifications(user_timezone, ["team_lead", "assigned_to", "parent_email"], email_notifications, template, lead, stage_reason, remarks)
-                other['notification'] = notification(email_notifications)
+            
+            email_notifications = handle_lead_email_notifications(user_timezone, ["parent_email"], email_notifications, "parent_trigger_email", lead, stage_reason, remarks)
+            other['notification'] = notification(email_notifications)
 
         return success_response('lead_stage_changed', status.HTTP_200_OK, [], other)
 

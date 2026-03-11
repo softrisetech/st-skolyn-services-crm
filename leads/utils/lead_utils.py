@@ -88,6 +88,7 @@ def handle_lead_email_notifications(user_timezone, sender_keys, email_notificati
             'branch_id': lead.branch_id,
             'branch_name': 'Houston',
             'branch_contact_number': '1234567890',
+            'branch_address': '123 Main St, Houston, TX',
             'class_name': 'Grade 1',
             'student_name': lead.first_name + " " + lead.last_name,
             'parent_name': parent_first_name + " " + parent_last_name if parent_first_name else None,
@@ -95,7 +96,9 @@ def handle_lead_email_notifications(user_timezone, sender_keys, email_notificati
             'parent_contact_number': parent_contact_number,
             'last_activity': DateTimeConverter.from_utc_datetime(last_follow_up_activity['date_time'].isoformat(), user_timezone) if last_follow_up_activity else None,
             'reason_type': stage_reason.name if stage_reason else None,
-            'reason': remarks
+            'reason': remarks,
+            'object_id': lead.stage_id,
+            'sub_object_id': stage_reason.id if stage_reason else None,
         }
     ))
         
