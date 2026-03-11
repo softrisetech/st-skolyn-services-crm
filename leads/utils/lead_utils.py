@@ -61,8 +61,10 @@ def decrypt_business_id(encrypted_id):
     except Exception:
         return None
     
-def handle_lead_email_notifications(user_timezone, sender_keys, email_notifications, trigger, lead, stage_reason=None, remarks=None):
+def handle_lead_email_notifications(data, user_timezone, sender_keys, email_notifications, trigger, lead, stage_reason=None, remarks=None):
     recipients = []
+    branch = data.get("branch")
+    class_data = data.get("class")
 
     team_lead_id = get_team_lead_id(lead)
     if "team_lead" in sender_keys and team_lead_id:
@@ -86,10 +88,10 @@ def handle_lead_email_notifications(user_timezone, sender_keys, email_notificati
             'business_id': lead.business_id,
             'business_name': 'Janson co',
             'branch_id': lead.branch_id,
-            'branch_name': 'Houston',
-            'branch_contact_number': '1234567890',
-            'branch_address': '123 Main St, Houston, TX',
-            'class_name': 'Grade 1',
+            'branch_name': branch["name"] if branch else None,
+            'branch_contact_number': branch["phone"] if branch else None,
+            'branch_address': branch["address"] if branch else None,
+            'class_name': class_data["name"] if class_data else None,
             'student_name': lead.first_name + " " + lead.last_name,
             'parent_name': parent_first_name + " " + parent_last_name if parent_first_name else None,
             'parent_email': parent_email,

@@ -230,8 +230,8 @@ def store_lead(request):
         store_leads_tracking(leads, auth_id)
 
         for lead in leads:
-            email_notifications = handle_lead_email_notifications(user_timezone, ["parent_email", "team_lead"], email_notifications, "lead_created", lead)
-            email_notifications = handle_lead_email_notifications(user_timezone, ["assigned_to"], email_notifications, "lead_assigned", lead)
+            email_notifications = handle_lead_email_notifications(data, user_timezone, ["parent_email", "team_lead"], email_notifications, "lead_created", lead)
+            email_notifications = handle_lead_email_notifications(data, user_timezone, ["assigned_to"], email_notifications, "lead_assigned", lead)
 
 
         if email_notifications:
@@ -308,7 +308,7 @@ def update_lead(request, pk):
         store_leads_tracking([updated_lead], auth_id, old_lead_data)
 
         if old_lead_data.assigned_to != updated_lead.assigned_to:
-            email_notifications = handle_lead_email_notifications(user_timezone, ["assigned_to", "last_activity"], email_notifications, "lead_assigned", lead)
+            email_notifications = handle_lead_email_notifications(data, user_timezone, ["assigned_to", "last_activity"], email_notifications, "lead_assigned", lead)
 
         if email_notifications:
             other['notification'] = notification(email_notifications)
@@ -418,9 +418,9 @@ def change_stage(request, pk):
                 template = "lead_won"
 
             if template:
-                email_notifications = handle_lead_email_notifications(user_timezone, ["team_lead", "assigned_to", "parent_email"], email_notifications, template, lead, stage_reason, remarks)
+                email_notifications = handle_lead_email_notifications(data, user_timezone, ["team_lead", "assigned_to", "parent_email"], email_notifications, template, lead, stage_reason, remarks)
             
-            email_notifications = handle_lead_email_notifications(user_timezone, ["parent_email"], email_notifications, "parent_trigger_email", lead, stage_reason, remarks)
+            email_notifications = handle_lead_email_notifications(data, user_timezone, ["parent_email"], email_notifications, "parent_trigger_email", lead, stage_reason, remarks)
             other['notification'] = notification(email_notifications)
 
         return success_response('lead_stage_changed', status.HTTP_200_OK, [], other)
