@@ -56,10 +56,11 @@ class LeadGetSerializer(serializers.ModelSerializer):
         return attachments if attachments else []
         
 class LeadStoreSerializer(serializers.ModelSerializer):
+    parent_contact = ContactSerializer(source="contact", read_only=True)
     class Meta:
         model = Lead
         fields = [
-                    "id", "business_id", "branch_id", "session_id", "class_id", "medium", "source", "stage", "tag", "team", "campaign", "contact", "code", "created_by", "assigned_to", "country_id",
+                    "id", "business_id", "branch_id", "session_id", "class_id", "medium", "source", "stage", "tag", "team", "campaign", "parent_contact", "contact", "code", "created_by", "assigned_to", "country_id",
                     "state_id", "city_id", "first_name", "last_name", "priority", "date_of_birth", "contact_number",
                     "email", "nic", "gender", "ethnicity", "remarks", "is_imported", "imported_at", "created_at", "updated_at"
                 ]
