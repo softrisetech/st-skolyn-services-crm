@@ -719,7 +719,7 @@ def import_leads(request):
 
     except Exception as e:
         return error_response(
-            'internal_error',
+            'internal_server_error',
             status.HTTP_500_INTERNAL_SERVER_ERROR,
             str(e)
         )
