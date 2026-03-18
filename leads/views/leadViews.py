@@ -31,8 +31,7 @@ from core.utils.response_utils import (
     error_response
 )
 from core.utils.notification_utils import (
-    notification, 
-    notification_obj
+    notification
 )
 from core.constants.model_constants import (
     STAGE, 
@@ -70,7 +69,8 @@ from ..models import (
     Team, 
     Campaign, 
     StageReasonEntry, 
-    FollowUp
+    FollowUp,
+    Contact
 )
 from access_control.utils.permission_constants import (
     LEAD_VIEW_ALL, 
@@ -555,7 +555,9 @@ def import_leads(request):
 
     file_errors = []
 
-    # --- Bulk fetch reference data ---
+    # =============================
+    # ✅ Step 1: Bulk fetch reference data
+    # =============================
     mediums = dict(
         Medium.objects.filter(business_id=business_id).values_list("name", "id")
     )
@@ -566,39 +568,14 @@ def import_leads(request):
         Tag.objects.filter(business_id=business_id).values_list("name", "id")
     )
 
-    # --- Step 1: Validate reference fields ---
-    for idx, lead_data in enumerate(leads_data):
-        actual_row = row_offset + idx
-        row_errors = {}
-
-        if lead_data.get('medium') and lead_data['medium'] not in mediums:
-            row_errors['medium'] = f"Medium '{lead_data['medium']}' does not exist."
-
-        if lead_data.get('source') and lead_data['source'] not in sources:
-            row_errors['source'] = f"Source '{lead_data['source']}' does not exist."
-
-        if lead_data.get('tag') and lead_data['tag'] not in tags:
-            row_errors['tag'] = f"Tag '{lead_data['tag']}' does not exist."
-
-        if row_errors:
-            file_errors.append({
-                "row": actual_row,
-                "errors": row_errors
-            })
-
-    if file_errors:
-        return error_response(
-            'import_file_data_not_correct',
-            status.HTTP_422_UNPROCESSABLE_ENTITY,
-            {"file_errors": file_errors}
-        )
-
-    # --- Step 2: Prepare & validate via serializer ---
+    # =============================
+    # ✅ Step 2: Prepare Contacts + Leads
+    # =============================
+    contacts_to_create = []
     leads_to_create = []
 
     for idx, lead_data in enumerate(leads_data):
         actual_row = row_offset + idx
-        row_errors = {}
 
         try:
             medium_id = mediums.get(lead_data.get('medium'))
@@ -615,12 +592,49 @@ def import_leads(request):
                 user_timezone
             )
 
+            # -------------------------
+            # ✅ CONTACT PREPARATION
+            # -------------------------
+            contact_payload = {
+                "business_id": business_id,
+                "father_first_name": lead_data.get("father_first_name"),
+                "father_last_name": lead_data.get("father_last_name"),
+                "father_contact_number": lead_data.get("father_contact_number"),
+                "father_email": lead_data.get("father_email"),
+                "father_nic": lead_data.get("father_nic"),
+                "is_father_applicable": lead_data.get("is_father_applicable", False),
+
+                "mother_first_name": lead_data.get("mother_first_name"),
+                "mother_last_name": lead_data.get("mother_last_name"),
+                "mother_contact_number": lead_data.get("mother_contact_number"),
+                "mother_email": lead_data.get("mother_email"),
+                "mother_nic": lead_data.get("mother_nic"),
+                "is_mother_applicable": lead_data.get("is_mother_applicable", False),
+
+                "created_at": created_at,
+                "updated_at": created_at,
+            }
+
+            contact_serializer = ContactSerializer(data=contact_payload)
+
+            if not contact_serializer.is_valid():
+                file_errors.append({
+                    "row": actual_row,
+                    "errors": contact_serializer.errors
+                })
+                continue
+
+            contacts_to_create.append(Contact(**contact_serializer.validated_data))
+
+            # -------------------------
+            # ✅ LEAD PREPARATION
+            # -------------------------
             prepared_lead = {
                 "business_id": business_id,
                 "branch_id": branch_id,
                 "medium": medium_id,
                 "source": source_id,
-                "stage": stage_obj.id if stage_obj else None,  # ✅ FIXED
+                "stage": stage_obj.id if stage_obj else None,
                 "tag": tag_id,
                 "first_name": lead_data.get("first_name"),
                 "last_name": lead_data.get("last_name"),
@@ -636,23 +650,19 @@ def import_leads(request):
                 "priority": 1,
                 "is_imported": True,
                 "imported_at": DateTimeConverter.to_utc_datetime(
-                    timezone.now().strftime("%Y-%m-%d %H:%M:%S"), user_timezone
+                    timezone.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    user_timezone
                 ),
             }
 
             serializer = LeadImportSerializer(data=prepared_lead)
 
             if serializer.is_valid():
-                leads_to_create.append(Lead(**serializer.validated_data))
+                leads_to_create.append(serializer.validated_data)
             else:
-                formatted_errors = {
-                    field: [str(msg) for msg in messages]
-                    for field, messages in serializer.errors.items()
-                }
-
                 file_errors.append({
                     "row": actual_row,
-                    "errors": formatted_errors
+                    "errors": serializer.errors
                 })
 
         except Exception as e:
@@ -661,7 +671,9 @@ def import_leads(request):
                 "errors": {"internal": str(e)}
             })
 
-    # --- Step 3: Return validation errors ---
+    # =============================
+    # ✅ Step 3: Return validation errors
+    # =============================
     if file_errors:
         return error_response(
             'import_file_data_not_correct',
@@ -669,10 +681,25 @@ def import_leads(request):
             {"file_errors": file_errors}
         )
 
-    # --- Step 4: Bulk create ---
+    # =============================
+    # ✅ Step 4: Bulk Create (Atomic)
+    # =============================
     try:
-        imported_leads = Lead.objects.bulk_create(leads_to_create)
-        store_leads_tracking(imported_leads, auth_id)
+        with transaction.atomic():
+
+            # 🔹 Create Contacts
+            created_contacts = Contact.objects.bulk_create(contacts_to_create)
+
+            # 🔹 Map contact_id → leads
+            final_leads = []
+            for i, lead_data in enumerate(leads_to_create):
+                lead_data["contact_id"] = created_contacts[i].id
+                final_leads.append(Lead(**lead_data))
+
+            # 🔹 Create Leads
+            imported_leads = Lead.objects.bulk_create(final_leads)
+
+            store_leads_tracking(imported_leads, auth_id)
 
         return success_response(
             'leads_imported',
