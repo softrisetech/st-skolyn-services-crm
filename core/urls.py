@@ -13,4 +13,5 @@ urlpatterns = [
     path('', include('access_control.urls')),
     path('', include('leads.urls')),
     path('', include('report_export.urls')),
+    path('', include('core.api_urls')),
 ]

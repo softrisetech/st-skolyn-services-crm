@@ -2,6 +2,7 @@ from django.db import models
 from autoslug import AutoSlugField
 from core.base_models import BaseBusinessModel
 from core.constants.model_constants import CHAR_LENGTH, LONG_CHAR_LENGTH, LONG_TEXT_LENGTH, PHONE_LENGTH, EMAIL_LENGTH, DECIMAL_LENGTH, DECIMAL_PLACES_LENGTH
+from core.audit_models import ActivityLog
 
 
 class ReportConnection(models.Manager):

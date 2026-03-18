@@ -5,7 +5,84 @@ from django.utils import timezone
 from django.http import JsonResponse
 # from pytz import timezone as pytz_timezone
 from django.utils.deprecation import MiddlewareMixin
+from threading import local
 
+# Thread-local storage
+_thread_locals = local()
+
+
+def get_current_request():
+    """Helper function to get current request from thread local"""
+    return getattr(_thread_locals, 'request', None)
+
+
+class ActivityLogMiddleware:
+    """
+    Middleware that extracts auth_id and business_id from request
+    and stores them in thread local for activity logging
+    """
+    
+    def __init__(self, get_response):
+        self.get_response = get_response
+    
+    def __call__(self, request):
+        # Extract auth_id and business_id
+        auth_id = None
+        business_id = None
+        
+        # Method 1: From request body (POST/PUT/PATCH)
+        if request.method in ['POST', 'PUT', 'PATCH'] and request.content_type == 'application/json':
+            try:
+                # Parse JSON body
+                body = request.body.decode('utf-8')
+                if body:
+                    data = json.loads(body)
+                    auth_id = data.get('auth_id')
+                    business_id = data.get('auth_business_id')
+            except (json.JSONDecodeError, UnicodeDecodeError):
+                pass
+        
+        # Method 2: From request attributes (set by other middleware/decorators)
+        if not auth_id and hasattr(request, 'auth_id'):
+            auth_id = request.auth_id
+        
+        if not business_id and hasattr(request, 'auth_business_id'):
+            business_id = request.auth_business_id
+        
+        # Method 3: From GET/POST params
+        if not auth_id:
+            auth_id = request.GET.get('auth_id') or request.POST.get('auth_id')
+        
+        if not business_id:
+            business_id = request.GET.get('auth_business_id') or request.POST.get('auth_business_id')
+        
+        # Method 4: From headers
+        if not auth_id:
+            auth_id = request.headers.get('X-Auth-Id') or request.headers.get('Auth-Id')
+        
+        if not business_id:
+            business_id = request.headers.get('X-Business-Id') or request.headers.get('Business-Id')
+        
+        # Store in thread local (even if business_id is None)
+        _thread_locals.request = request
+        _thread_locals.auth_id = auth_id
+        _thread_locals.business_id = business_id
+        
+        # Attach to request
+        request.audit_auth_id = auth_id
+        request.audit_business_id = business_id        
+        # Process request
+        response = self.get_response(request)
+        
+        # Clean up thread local
+        if hasattr(_thread_locals, 'request'):
+            del _thread_locals.request
+        if hasattr(_thread_locals, 'auth_id'):
+            del _thread_locals.auth_id
+        if hasattr(_thread_locals, 'business_id'):
+            del _thread_locals.business_id
+        
+        return response
 class GatewayAuthorizationMiddleware:
     """
     Initialize the AccessKeyMiddleware with the given response handler.
