@@ -4,6 +4,7 @@ import math
 from django.db import transaction
 from rest_framework import status
 from django.utils import timezone
+from django.db import IntegrityError
 from rest_framework.decorators import api_view
 from report_export.utils.constants import constants
 from core.utils.helpers import check_if_user_is_staff
@@ -540,139 +541,272 @@ def generate_leads(request):
     return success_response('record_stored', status.HTTP_201_CREATED, lead_serializer.data)
 
 
-# # Import Leads Function
-# @api_view(['POST'])
-# @access_control_middleware
-# def import_leads(request):
-#     data = request.data
-#     business_id = data.get('auth_business_id')
-#     user_timezone = data.get("auth_timezone")
-#     branch_id = data.get('branch_id')
-#     user_id = data.get('auth_id')
-#     leads_data = data.get('leads', [])
-#     file_errors = []
+# Import Leads Function
+@api_view(['POST'])
+@access_control_middleware
+def import_leads(request):
+    data = request.data
+    business_id = data.get('auth_business_id')
+    user_timezone = data.get("auth_timezone")
+    branch_id = data.get('branch_id')
+    auth_id = data.get('auth_id')
+    leads_data = data.get('leads', [])
+    row_offset = data.get('row_offset', 2)
 
-#     # --- Bulk fetch reference data for faster lookup ---
-#     mediums = dict(
-#         Medium.objects.filter(business_id=business_id).values_list("name", "id")
-#     )
-#     sources = dict(
-#         Source.objects.filter(business_id=business_id).values_list("name", "id")
-#     )
-#     tags = dict(
-#         Tag.objects.filter(business_id=business_id).values_list("name", "id")
-#     )
-#     stages = {s.name: s for s in Stage.objects.filter(business_id=business_id)}
+    file_errors = []
 
-#     # --- Validate leads ---
-#     for idx, lead_data in enumerate(leads_data, start=2):  # start=2 if row 1 is header
-#         row_errors = {}
-#         if lead_data.get('medium') and lead_data['medium'] not in mediums:
-#             row_errors['medium'] = f"Medium '{lead_data['medium']}' does not exist."
-#         if lead_data.get('source') and lead_data['source'] not in sources:
-#             row_errors['source'] = f"Source '{lead_data['source']}' does not exist."
-#         if lead_data.get('tag') and lead_data['tag'] not in tags:
-#             row_errors['tag'] = f"Tag '{lead_data['tag']}' does not exist."
-#         if lead_data.get('stage') and lead_data['stage'] not in stages:
-#             row_errors['stage'] = f"Stage '{lead_data['stage']}' does not exist."
+    # --- Bulk fetch reference data ---
+    mediums = dict(
+        Medium.objects.filter(business_id=business_id).values_list("name", "id")
+    )
+    sources = dict(
+        Source.objects.filter(business_id=business_id).values_list("name", "id")
+    )
+    tags = dict(
+        Tag.objects.filter(business_id=business_id).values_list("name", "id")
+    )
 
-#         if row_errors:
-#             file_errors.append({"row": idx, "errors": row_errors})
+    # --- Step 1: Validate reference fields ---
+    for idx, lead_data in enumerate(leads_data):
+        actual_row = row_offset + idx
+        row_errors = {}
 
-#     if file_errors:
-#         return error_response(
-#             'import_data_missing',
-#             status.HTTP_422_UNPROCESSABLE_ENTITY,
-#             {"file_errors": file_errors}
-#         )
+        if lead_data.get('medium') and lead_data['medium'] not in mediums:
+            row_errors['medium'] = f"Medium '{lead_data['medium']}' does not exist."
 
-#     # --- Create leads ---
-#     leads_to_create = []
-#     tracking_to_create = []
+        if lead_data.get('source') and lead_data['source'] not in sources:
+            row_errors['source'] = f"Source '{lead_data['source']}' does not exist."
 
-#     try:
-#         for lead_data in leads_data:
-#             medium_id = mediums.get(lead_data.get('medium'))
-#             source_id = sources.get(lead_data.get('source'))
-#             tag_id = tags.get(lead_data.get('tag'))
-#             stage_obj = stages.get(lead_data.get('stage'))
-#             is_opportunity = False
+        if lead_data.get('tag') and lead_data['tag'] not in tags:
+            row_errors['tag'] = f"Tag '{lead_data['tag']}' does not exist."
 
-#             if stage_obj:
-#                 stage_id = stage_obj.id
-#                 if stage_obj.status == "convert":
-#                     is_opportunity = True
-#             else:
-#                 stage_id = lead_default_stage(business_id)
+        if row_errors:
+            file_errors.append({
+                "row": actual_row,
+                "errors": row_errors
+            })
 
-#             created_at = DateTimeConverter.to_utc_datetime(
-#                 lead_data.get("created_at") or timezone.now().strftime("%Y-%m-%d %H:%M:%S"),
-#                 user_timezone
-#             )
+    if file_errors:
+        return error_response(
+            'import_file_data_not_correct',
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+            {"file_errors": file_errors}
+        )
 
-#             prepared_lead = {
-#                 "business_id": business_id,
-#                 "branch_id": branch_id,
-#                 "medium": medium_id,
-#                 "source": source_id,
-#                 "stage": stage_id,
-#                 "tag": tag_id,
-#                 "is_opportunity": is_opportunity,
-#                 "p_name": lead_data.get("p_name"),
-#                 "p_contact_number": lead_data.get("p_contact_number"),
-#                 "p_email": lead_data.get("p_email"),
-#                 "created_at": created_at,
-#                 "updated_at": created_at,
-#                 "date_of_birth": lead_data.get("date_of_birth"),
-#                 "name": lead_data.get("name"),
-#                 "contact_number": lead_data.get("contact_number"),
-#                 "email": lead_data.get("email"),
-#                 "previous_education": lead_data.get("previous_education"),
-#                 "created_by": user_id,
-#                 "priority": 1,
-#                 "is_imported": True,
-#                 "imported_at": DateTimeConverter.to_utc_datetime(
-#                     timezone.now().strftime("%Y-%m-%d %H:%M:%S"), user_timezone
-#                 ),
-#             }
+    # --- Step 2: Prepare & validate via serializer ---
+    leads_to_create = []
 
-#             serializer = LeadImportSerializer(data=prepared_lead)
-#             if serializer.is_valid():
-#                 leads_to_create.append(Lead(**serializer.validated_data))
-#             else:
-#                 return error_response('validation_failed', status.HTTP_422_UNPROCESSABLE_ENTITY, serializer.errors)
+    for idx, lead_data in enumerate(leads_data):
+        actual_row = row_offset + idx
+        row_errors = {}
 
-#         # Bulk create leads
-#         generated_leads = Lead.objects.bulk_create(leads_to_create)
+        try:
+            medium_id = mediums.get(lead_data.get('medium'))
+            source_id = sources.get(lead_data.get('source'))
+            tag_id = tags.get(lead_data.get('tag'))
 
-#         # Collect Tracking objects
-#         for lead, lead_data in zip(generated_leads, leads_data):
-#             medium_id = mediums.get(lead_data.get('medium'))
-#             source_id = sources.get(lead_data.get('source'))
-#             tag_id = tags.get(lead_data.get('tag'))
-#             stage_obj = stages.get(lead_data.get('stage'))
-#             stage_id = stage_obj.id if stage_obj else lead_default_stage(business_id)
+            stage_obj = (
+                get_default_lead_stage(business_id) or
+                get_default_lead_stage_by_priority(business_id)
+            )
 
-#             if medium_id:
-#                 tracking_to_create.append(tracking_object(business_id, lead.id, medium_id, MEDIUM, user_id))
-#             if source_id:
-#                 tracking_to_create.append(tracking_object(business_id, lead.id, source_id, SOURCE, user_id))
-#             if stage_id:
-#                 tracking_to_create.append(tracking_object(business_id, lead.id, stage_id, STAGE, user_id))
-#             if tag_id:
-#                 tracking_to_create.append(tracking_object(business_id, lead.id, tag_id, TAG, user_id))
+            created_at = DateTimeConverter.to_utc_datetime(
+                lead_data.get("created_at") or timezone.now().strftime("%Y-%m-%d %H:%M:%S"),
+                user_timezone
+            )
 
-#         if tracking_to_create:
-#             Tracking.objects.bulk_create(tracking_to_create)
+            prepared_lead = {
+                "business_id": business_id,
+                "branch_id": branch_id,
+                "medium": medium_id,
+                "source": source_id,
+                "stage": stage_obj.id if stage_obj else None,  # ✅ FIXED
+                "tag": tag_id,
+                "first_name": lead_data.get("first_name"),
+                "last_name": lead_data.get("last_name"),
+                "date_of_birth": lead_data.get("date_of_birth"),
+                "contact_number": lead_data.get("contact_number"),
+                "email": lead_data.get("email"),
+                "nic": lead_data.get("nic"),
+                "gender": lead_data.get("gender"),
+                "remarks": lead_data.get("remarks"),
+                "created_at": created_at,
+                "updated_at": created_at,
+                "created_by": auth_id,
+                "priority": 1,
+                "is_imported": True,
+                "imported_at": DateTimeConverter.to_utc_datetime(
+                    timezone.now().strftime("%Y-%m-%d %H:%M:%S"), user_timezone
+                ),
+            }
 
-#         return success_response('leads_imported', status.HTTP_201_CREATED, {
-#             'message': 'leads successfully imported'
-#         })
+            serializer = LeadImportSerializer(data=prepared_lead)
 
-#     except IntegrityError as e:
-#         return error_response('integrity_error', status.HTTP_422_UNPROCESSABLE_ENTITY, str(e))
-#     except Exception as e:
-#         return error_response('internal_error', status.HTTP_500_INTERNAL_SERVER_ERROR, str(e))
+            if serializer.is_valid():
+                leads_to_create.append(Lead(**serializer.validated_data))
+            else:
+                formatted_errors = {
+                    field: [str(msg) for msg in messages]
+                    for field, messages in serializer.errors.items()
+                }
+
+                file_errors.append({
+                    "row": actual_row,
+                    "errors": formatted_errors
+                })
+
+        except Exception as e:
+            file_errors.append({
+                "row": actual_row,
+                "errors": {"internal": str(e)}
+            })
+
+    # --- Step 3: Return validation errors ---
+    if file_errors:
+        return error_response(
+            'import_file_data_not_correct',
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+            {"file_errors": file_errors}
+        )
+
+    # --- Step 4: Bulk create ---
+    try:
+        imported_leads = Lead.objects.bulk_create(leads_to_create)
+        store_leads_tracking(imported_leads, auth_id)
+
+        return success_response(
+            'leads_imported',
+            status.HTTP_201_CREATED,
+            {'message': 'Leads successfully imported.'}
+        )
+
+    except IntegrityError:
+        return error_response(
+            'import_file_data_not_correct',
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+            {"file_errors": [{
+                "row": None,
+                "errors": {"database": "Duplicate or invalid data detected."}
+            }]}
+        )
+
+    except Exception as e:
+        return error_response(
+            'internal_error',
+            status.HTTP_500_INTERNAL_SERVER_ERROR,
+            str(e)
+        )
+    
+
+@api_view(["POST"])
+def validate_import_leads(request):
+    data = request.data
+    business_id = data.get('auth_business_id')
+    user_timezone = data.get("auth_timezone")
+    branch_id = data.get('branch_id')
+    auth_id = data.get('auth_id')
+    leads_data = data.get('leads', [])
+    row_offset = data.get('row_offset', 2)
+
+    file_errors = []
+
+    # --- Bulk fetch reference data ---
+    mediums = dict(
+        Medium.objects.filter(business_id=business_id).values_list("name", "id")
+    )
+    sources = dict(
+        Source.objects.filter(business_id=business_id).values_list("name", "id")
+    )
+    tags = dict(
+        Tag.objects.filter(business_id=business_id).values_list("name", "id")
+    )
+
+    # --- Validate all rows ---
+    for idx, lead_data in enumerate(leads_data):
+        actual_row = row_offset + idx
+        row_errors = {}
+
+        try:
+            # --- Step 1: Validate reference fields ---
+            if lead_data.get('medium') and lead_data['medium'] not in mediums:
+                row_errors['medium'] = [f"Medium '{lead_data['medium']}' does not exist."]
+
+            if lead_data.get('source') and lead_data['source'] not in sources:
+                row_errors['source'] = [f"Source '{lead_data['source']}' does not exist."]
+
+            if lead_data.get('tag') and lead_data['tag'] not in tags:
+                row_errors['tag'] = [f"Tag '{lead_data['tag']}' does not exist."]
+
+            # --- Step 2: Prepare data for serializer ---
+            medium_id = mediums.get(lead_data.get('medium'))
+            source_id = sources.get(lead_data.get('source'))
+            tag_id = tags.get(lead_data.get('tag'))
+
+            stage_obj = (
+                get_default_lead_stage(business_id) or
+                get_default_lead_stage_by_priority(business_id)
+            )
+
+            created_at = DateTimeConverter.to_utc_datetime(
+                lead_data.get("created_at") or timezone.now().strftime("%Y-%m-%d %H:%M:%S"),
+                user_timezone
+            )
+
+            prepared_lead = {
+                "business_id": business_id,
+                "branch_id": branch_id,
+                "medium": medium_id,
+                "source": source_id,
+                "stage": stage_obj.id if stage_obj else None,
+                "tag": tag_id,
+                "first_name": lead_data.get("first_name"),
+                "last_name": lead_data.get("last_name"),
+                "date_of_birth": lead_data.get("date_of_birth"),
+                "contact_number": lead_data.get("contact_number"),
+                "email": lead_data.get("email"),
+                "nic": lead_data.get("nic"),
+                "gender": lead_data.get("gender"),
+                "remarks": lead_data.get("remarks"),
+                "created_at": created_at,
+                "updated_at": created_at,
+                "created_by": auth_id,
+                "priority": 1,
+                "is_imported": True,
+                "imported_at": DateTimeConverter.to_utc_datetime(
+                    timezone.now().strftime("%Y-%m-%d %H:%M:%S"), user_timezone
+                ),
+            }
+
+            # --- Step 3: Serializer validation ---
+            serializer = LeadImportSerializer(data=prepared_lead)
+
+            if not serializer.is_valid():
+                for field, messages in serializer.errors.items():
+                    row_errors[field] = [str(msg) for msg in messages]
+
+        except Exception as e:
+            row_errors['internal'] = [str(e)]
+
+        # --- Collect row errors ---
+        if row_errors:
+            file_errors.append({
+                "row": actual_row,
+                "errors": row_errors
+            })
+
+    # --- Final response ---
+    if file_errors:
+        return error_response(
+            'import_file_data_not_correct',
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+            {"file_errors": file_errors}
+        )
+
+    return success_response(
+        'validation_successful',
+        status.HTTP_200_OK,
+        {'message': 'All leads are valid.'}
+    )
 
 # @api_view(['POST'])
 # @access_control_middleware

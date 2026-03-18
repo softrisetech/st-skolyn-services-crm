@@ -310,10 +310,9 @@ class LeadImportSerializer(serializers.ModelSerializer):
     class Meta:
         model = Lead
         fields = [
-            'business_id', 'branch_id', 'name', 'email', 'other_info', 'session_id',
-            'contact_number', 'medium', 'source', 'tag', 'stage', 'is_opportunity',
-            'p_name', 'p_contact_number', 'p_email', 'date_of_birth', 'previous_education',
-            'created_by', 'created_at', 'updated_at', 'registration_no', 'priority', 'is_imported', 'imported_at'
+            'business_id', 'branch_id', 'medium', 'source', 'stage', 'tag', 'first_name', 'last_name', 
+            'date_of_birth', 'contact_number', 'email', 'nic', 'gender', 'remarks', 'created_at', 'updated_at',
+            'created_by', 'priority', 'is_imported', 'imported_at'    
         ]
 
 class FollowUpTypeSerializer(serializers.ModelSerializer):

@@ -65,7 +65,9 @@ from .views.leadViews import (
     change_stage, 
     delete_attachment,
     generate_leads,
-    export_leads
+    export_leads,
+    import_leads,
+    validate_import_leads
 )
 from .views.stageReasonViews import (
     get_stage_reasons, 
@@ -206,6 +208,9 @@ urlpatterns = [
     path('leads/kanban', get_leads_kanban),
     path('leads/kanban/<uuid:stage_id>', get_leads_kanban),
     path('leads/generate', generate_leads),
+    path('leads/import', import_leads),
+    path('leads/validate/import', validate_import_leads),
+
 
     path('lead/<uuid:lead_id>/follow-ups/list', get_lead_follow_ups),
     path('lead/<uuid:lead_id>/follow-ups/<uuid:pk>/get', get_lead_follow_up),
@@ -226,55 +231,5 @@ urlpatterns = [
     path('lead/contacts/<uuid:pk>/delete', delete_lead_contact),
 
     path('lead/trackings/list', get_lead_trackings),
-
-
-    # path('leads/', lead_list),
-    # path('leads/stage-wise/', lead_list_stage_wise),
-    # path('leads/stage-wise/<uuid:pk>/', lead_list_stage_wise),
-    # path('leads/import/', import_leads),
-    # path('leads/export/', export_leads),
-    # path('leads/<uuid:pk>/', lead_list),
-    # path('leads/create/', lead_create),
-    # path('leads/update/<uuid:pk>/', lead_update),
-    # path('leads/delete/<uuid:pk>/', lead_delete),
-    # path('leads/change/stage/<uuid:pk>/', lead_change_stage),
-    # path('leads/attachment/delete/<uuid:pk>/', lead_delete_attachment),
-
-
-    # path('leads/by-source', leads_by_source),
-    # path('leads/by-medium', leads_by_medium),
-    # path('leads/by-stage', leads_by_stage),
-    # path('leads/by-funnel-stage', funnel_stages),
-    # path('leads/by-tag', leads_by_tag),
-    # path('leads/by-branch', leads_by_branch),
-    # path('leads/by-session', leads_by_session),
-    # path('leads/monthly', monthly_leads),
-
-
-    # path('lead/follow-ups/<uuid:pk>/', FollowUpView.as_view()),
-    # path('lead/follow-ups', FollowUpView.as_view()),
-
-
-    # path('lead/sources/<uuid:pk>/', SourceView.as_view()),
-    # path('lead/sources', SourceView.as_view()),
-    # path('lead/sources/status/update/<uuid:pk>/', change_source_status),
-
-
-    # path('lead/stages/<uuid:pk>/', StageView.as_view()),
-    # path('lead/stages', StageView.as_view()),
-    # path('lead/stages/status/update/<uuid:pk>/', change_stage_status),
-
-
-    # path('lead/tags/<uuid:pk>/', TagView.as_view()),
-    # path('lead/tags', TagView.as_view()),
-    # path('lead/tags/status/update/<uuid:pk>/', change_tag_status),
-
-    # path('lead/trackings/<uuid:pk>/', TrackingView.as_view()),
-    # path('lead/trackings', TrackingView.as_view()),
-
-    # path('follow-up/types/<uuid:pk>/', FollowUpTypeView.as_view()),
-    # path('follow-up/types', FollowUpTypeView.as_view()),
-    # path('follow-up/types/status/update/<uuid:pk>/', change_follow_up_type_status),
-
 
 ]
