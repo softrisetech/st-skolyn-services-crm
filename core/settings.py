@@ -55,6 +55,7 @@ INSTALLED_APPS = SYSTEM_APPS + INSTALLED_APPS + MODULAR_APPS
 
 MIDDLEWARE = [
     'core.middleware.GatewayAuthorizationMiddleware', #Custom Middleware for Unauthorized Access
+    'core.middleware.ActivityLogMiddleware', #Custom Middleware for Activity Logging
     #'core.middleware.TimezoneMiddleware', #Custom Middleware for Timezone
     #'access_control.middleware.AccessControlMiddleware', #Custom Middleware for Role Permission Access
     'django.middleware.security.SecurityMiddleware',
