@@ -61,8 +61,11 @@ def decrypt_business_id(encrypted_id):
     except Exception:
         return None
     
-def handle_lead_email_notifications(user_timezone, sender_keys, email_notifications, trigger, lead, stage_reason=None, remarks=None):
+def handle_lead_email_notifications(data, user_timezone, sender_keys, email_notifications, trigger, lead, stage_reason=None, remarks=None):
     recipients = []
+    branch = data.get("branch")
+    class_data = data.get("class")
+    business_name = data.get("auth_business_name")
 
     team_lead_id = get_team_lead_id(lead)
     if "team_lead" in sender_keys and team_lead_id:
@@ -71,9 +74,9 @@ def handle_lead_email_notifications(user_timezone, sender_keys, email_notificati
     if "assigned_to" in sender_keys and lead.assigned_to:
         recipients.append(lead.assigned_to)
 
-    parent_first_name, parent_last_name, parent_email, parent_contact_number = get_lead_parent(lead)
-    if "parent_email" in sender_keys and parent_email:
-        recipients.append(parent_email)
+    parent_first_name, parent_last_name, parent_id, parent_contact_number = get_lead_parent(lead)
+    if "parent_email" in sender_keys and parent_id:
+        recipients.append(parent_id)
 
     last_follow_up_activity = None
     if "last_activity" in sender_keys:
@@ -84,15 +87,15 @@ def handle_lead_email_notifications(user_timezone, sender_keys, email_notificati
         recipients,
         {
             'business_id': lead.business_id,
-            'business_name': 'Janson co',
+            'business_name': business_name if business_name else None,
             'branch_id': lead.branch_id,
-            'branch_name': 'Houston',
-            'branch_contact_number': '1234567890',
-            'branch_address': '123 Main St, Houston, TX',
-            'class_name': 'Grade 1',
+            'branch_name': branch["name"] if branch else None,
+            'branch_contact_number': branch["phone"] if branch else None,
+            'branch_address': branch["address"] if branch else None,
+            'class_name': class_data["name"] if class_data else None,
             'student_name': lead.first_name + " " + lead.last_name,
             'parent_name': parent_first_name + " " + parent_last_name if parent_first_name else None,
-            'parent_email': parent_email,
+            'parent_email': parent_id,
             'parent_contact_number': parent_contact_number,
             'last_activity': DateTimeConverter.from_utc_datetime(last_follow_up_activity['date_time'].isoformat(), user_timezone) if last_follow_up_activity else None,
             'reason_type': stage_reason.name if stage_reason else None,
@@ -117,9 +120,9 @@ def get_lead_parent(lead):
     lead_contact = lead.contact
     if lead_contact:
         if lead_contact.is_father_applicable:
-            return lead_contact.father_first_name, lead_contact.father_last_name, lead_contact.father_email, lead_contact.father_contact_number
+            return lead_contact.father_first_name, lead_contact.father_last_name, lead_contact.id, lead_contact.father_contact_number
         elif lead_contact.is_mother_applicable:
-            return lead_contact.mother_first_name, lead_contact.mother_last_name, lead_contact.mother_email, lead_contact.mother_contact_number
+            return lead_contact.mother_first_name, lead_contact.mother_last_name, lead_contact.id, lead_contact.mother_contact_number
     return None, None, None, None
 
 def get_team_lead_id(lead):
