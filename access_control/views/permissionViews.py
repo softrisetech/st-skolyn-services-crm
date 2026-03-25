@@ -194,6 +194,7 @@ def change_permission_status(request, pk):
 @api_view(['POST'])
 def get_role_based_permissions(request):
     data = request.data
+    print("data..................",data)
     is_staff = data.get("auth_is_staff")
     if is_staff == "true":
         role_id = data.get("auth_role_id")
@@ -203,6 +204,8 @@ def get_role_based_permissions(request):
         permissions = Permission.objects.all()
 
     permission_data = PermissionSerializer(permissions, many=True).data
+    
+    print("permission_data",permission_data)
 
     result = {}
 
@@ -227,6 +230,9 @@ def get_role_based_permissions(request):
                 "frontend_url": [u.strip() for u in frontend_url.split(",") if u.strip()] if frontend_url else [],
                 "key": [key] if key else []
             }
+            
+        print("result",result)
+        
 
         #remove duplicates
         for module_data in result.values():

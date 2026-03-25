@@ -5,7 +5,7 @@ class PermissionSerializer(serializers.ModelSerializer):
     module_obj = serializers.SerializerMethodField()
     class Meta:
         model = Permission
-        fields = ['id', 'module', 'module_obj', 'name', 'description', 'request_method', 'url', 'frontend_url', 'key', 'type', 'sort_order', 'is_active', 'created_at', 'updated_at']
+        fields = ['id', 'module', 'module_obj', 'name', 'description', 'url', 'frontend_url', 'key', 'type', 'sort_order', 'is_active', 'created_at', 'updated_at']
 
     def validate(self, data):
         errors = {}
