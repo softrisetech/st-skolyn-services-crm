@@ -38,7 +38,7 @@ class ModuleSerializer(serializers.ModelSerializer):
     permissions = PermissionSerializer(many=True, read_only=True)
     class Meta:
         model = Module
-        fields = ['id', 'app_id', 'name', 'slug', 'description', 'is_active', 'permissions', 'created_at', 'updated_at', 'app_slug']
+        fields = ['id', 'app_id', 'name', 'slug', 'description', 'is_active', 'sort_order', 'permissions', 'created_at', 'updated_at', 'app_slug']
 
     def validate(self, data):
         errors = {}
