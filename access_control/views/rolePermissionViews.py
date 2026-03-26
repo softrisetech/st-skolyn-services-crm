@@ -55,26 +55,25 @@ def role_permissions(request, pk):
 
 
 
+
 @api_view(['POST'])
 def assign_permission_to_role(request, pk):
-    data = request.data
-    business_id = data.get("auth_business_id")
     try:
         data = []
-        permission_modules = data.get('role_permissions', [])
+        permission_modules = request.data.get('role_permissions', [])
 
         module_ids = []
         for permission_module in permission_modules:
             module_ids.append(permission_module["id"])
 
         permission_ids = Permission.objects.filter(module_id__in=module_ids).values_list("id")
-        RolePermission.objects.filter(business_id=business_id, role_id=pk, permission_id__in=permission_ids).delete()
+        RolePermission.objects.filter(role_id=pk, permission_id__in=permission_ids).delete()
 
         for permission_module in permission_modules:
             for permissions in permission_module.values():
                 for permission in permissions:
                     if isinstance(permission, dict) and permission.get('checked'):
-                        data.append({'business_id': business_id, 'role_id': pk, 'permission': permission.get('id')})
+                        data.append({'role_id': pk, 'permission': permission.get('id')})
 
         if data:
             serializer = RolePermissionSerializer(data=data, many=True)
