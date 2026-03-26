@@ -182,9 +182,10 @@ class StageSerializer(serializers.ModelSerializer):
         return data
     
 class StageReasonSerializer(serializers.ModelSerializer):
+    stage_name = serializers.CharField(source='stage.name', read_only=True)
     class Meta:
         model = StageReason
-        fields = ['id', 'business_id', 'stage', 'name', 'slug', 'description', 'is_active', 'created_at', 'updated_at']
+        fields = ['id', 'business_id', 'stage', 'stage_name', 'name', 'slug', 'description', 'is_active', 'created_at', 'updated_at']
 
     def validate(self, data):
         errors = {}
