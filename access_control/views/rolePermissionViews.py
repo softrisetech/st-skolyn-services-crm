@@ -61,19 +61,27 @@ def assign_permission_to_role(request, pk):
     try:
         data = []
         permission_modules = request.data.get('role_permissions', [])
+        business_id = request.data.get('auth_business_id')
+
+        if not business_id:
+            return error_response('auth_business_id is required', status.HTTP_400_BAD_REQUEST)
 
         module_ids = []
         for permission_module in permission_modules:
             module_ids.append(permission_module["id"])
 
         permission_ids = Permission.objects.filter(module_id__in=module_ids).values_list("id")
-        RolePermission.objects.filter(role_id=pk, permission_id__in=permission_ids).delete()
+        RolePermission.objects.filter(role_id=pk, business_id=business_id, permission_id__in=permission_ids).delete()
 
         for permission_module in permission_modules:
             for permissions in permission_module.values():
                 for permission in permissions:
                     if isinstance(permission, dict) and permission.get('checked'):
-                        data.append({'role_id': pk, 'permission': permission.get('id')})
+                        data.append({
+                            'role_id': pk,
+                            'permission': permission.get('id'),
+                            'business_id': business_id
+                        })
 
         if data:
             serializer = RolePermissionSerializer(data=data, many=True)
@@ -81,10 +89,10 @@ def assign_permission_to_role(request, pk):
                 serializer.save()
                 return success_response('Permissions assigned successfully', status.HTTP_201_CREATED, serializer.data)
             else:
-                return error_response(serializer.errors, status.HTTP_400_BAD_REQUEST)
+                # ✅ convert errors to string so error_response doesn't get a list
+                return error_response(str(serializer.errors), status.HTTP_400_BAD_REQUEST)
         else:
             return success_response('Permissions assigned successfully', status.HTTP_201_CREATED, [])
-
 
     except Exception as e:
         return error_response(str(e), status.HTTP_500_INTERNAL_SERVER_ERROR)
