@@ -194,9 +194,8 @@ def change_permission_status(request, pk):
 @api_view(['POST'])
 def get_role_based_permissions(request):
     data = request.data
-    print("data..................",data)
     is_staff = data.get("auth_is_staff")
-    if is_staff == "true":
+    if is_staff == "true" or is_staff == True:
         role_id = data.get("auth_role_id")
         role_permission_ids = RolePermission.objects.filter(role_id=role_id).values("permission_id")
         permissions = Permission.objects.filter(id__in=role_permission_ids)
