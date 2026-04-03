@@ -203,9 +203,6 @@ def get_role_based_permissions(request):
         permissions = Permission.objects.all()
 
     permission_data = PermissionSerializer(permissions, many=True).data
-    
-    print("permission_data",permission_data)
-
     result = {}
 
     for permission in permission_data:
@@ -228,10 +225,7 @@ def get_role_based_permissions(request):
                 "backend_url": [u.strip() for u in url.split(",") if u.strip()] if url else [],
                 "frontend_url": [u.strip() for u in frontend_url.split(",") if u.strip()] if frontend_url else [],
                 "key": [key] if key else []
-            }
-            
-        print("result",result)
-        
+            }        
 
         #remove duplicates
         for module_data in result.values():
