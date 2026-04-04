@@ -23,13 +23,11 @@ def access_control_middleware(view_func):
             return view_func(request, *args, **kwargs)
 
         url = get_current_url(request)
-        request_method = request.method
         permissions = Permission.objects.filter(
             Q(url__iexact=url) | 
             Q(url__istartswith=f"{url},") | 
             Q(url__icontains=f",{url},") | 
             Q(url__iendswith=f",{url}"), 
-            request_method__icontains=request_method,
             is_active=True
         )
 

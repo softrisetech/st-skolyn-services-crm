@@ -52,10 +52,8 @@ class AccessControlMiddleware:
             return response
 
         role_id = body_data.get("role_id")
-        request_method = request.method
-
         #check if permission exists in system other wise by pass the middleware
-        permission = Permission.objects.filter(url=current_url, request_method=request_method).first()
+        permission = Permission.objects.filter(url=current_url).first()
         if not permission:
             return self.get_response(request)
 
