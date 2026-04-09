@@ -412,6 +412,7 @@ def change_stage(request, pk):
             # Tracking
             store_leads_tracking([lead], auth_id, old_lead_data)
 
+
             template = None
             if stage.type == LOST:
                 template = "lead_lost"
