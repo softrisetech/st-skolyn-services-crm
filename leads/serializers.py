@@ -13,6 +13,33 @@ class ContactSerializer(serializers.ModelSerializer):
             "mother_first_name", "mother_last_name", "mother_contact_number", "mother_email", "mother_nic", "is_mother_applicable", "created_at", "updated_at"
         ]
 
+    def validate(self, data):
+        errors = {}
+
+        business_id = data.get('business_id') or (self.instance.business_id if self.instance else None)
+
+        father_nic = data.get('father_nic')
+        mother_nic = data.get('mother_nic')
+
+        queryset = Contact.objects.filter(business_id=business_id)
+
+        if self.instance:
+            queryset = queryset.exclude(id=self.instance.id)
+
+        if father_nic and queryset.filter(father_nic=father_nic).exists():
+            errors["father_nic"] = "This father NIC already exists."
+
+        if mother_nic and queryset.filter(mother_nic=mother_nic).exists():
+            errors["mother_nic"] = "This mother NIC already exists."
+
+        if father_nic and mother_nic and father_nic == mother_nic:
+            errors["father_nic"] = ["Father NIC and Mother NIC cannot be the same."]
+
+        if errors:
+            raise serializers.ValidationError(errors)
+
+        return data
+
 class AttachmentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Attachment
