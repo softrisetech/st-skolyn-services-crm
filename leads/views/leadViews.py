@@ -18,7 +18,9 @@ from leads.utils.lead_utils import (
     get_default_lead_stage_by_priority, 
     generate_unique_code, 
     decrypt_business_id, 
-    handle_lead_email_notifications
+    handle_lead_email_notifications,
+    handle_lead_web_notifications,
+    get_lead_contact_by_cnic
 )
 from django.db.models import (
     Q, 
@@ -195,6 +197,7 @@ def store_lead(request):
     auth_id = data.get('auth_id')
     business_id = data.get('auth_business_id')
     user_timezone = data.get("auth_timezone")
+    contact_id = data.get('contact_id', None)
     base_payload = {**data, "business_id": business_id, "created_by": auth_id}
     lookup_map = {'medium': Medium, 'source': Source, 'tag': Tag, 'team': Team, 'campaign': Campaign}
     web_notifications, email_notifications, other = [], [], {}
@@ -213,14 +216,31 @@ def store_lead(request):
 
     base_payload["stage"] = default_stage.id
 
-    # ✅ Validate Contact BEFORE transaction
-    contact_serializer = ContactSerializer(data=base_payload)
-    if not contact_serializer.is_valid():
-        return error_response('record_store_failed', status.HTTP_422_UNPROCESSABLE_ENTITY, contact_serializer.errors)
+    # if contact id given in request
+    if contact_id:
+        contact = Contact.objects.filter(business_id=business_id, id=contact_id).first()
+        if not contact:
+            return error_response('contact_not_found', status.HTTP_404_NOT_FOUND)
+    # if contact id not given in request
+    else:
+        # check for contact already exists in system by father and mother cnic 
+        existing_contact = get_lead_contact_by_cnic(business_id, base_payload.get("father_nic"), base_payload.get("mother_nic"))
+        if existing_contact:
+            contact_id = existing_contact.id
+
+        # if contact not exists in system create new contact
+        if contact_id is None:
+            # ✅ Validate Contact BEFORE transaction
+            contact_serializer = ContactSerializer(data=base_payload)
+            if not contact_serializer.is_valid():
+                return error_response('record_store_failed', status.HTTP_422_UNPROCESSABLE_ENTITY, contact_serializer.errors)
 
     with transaction.atomic():
-        contact = contact_serializer.save()
-        leads_payload = prepare_leads_to_store({**base_payload, "contact": contact.id})
+        if contact_id is None:
+            contact = contact_serializer.save()
+            contact_id = contact.id
+
+        leads_payload = prepare_leads_to_store({**base_payload, "contact": contact_id})
         lead_serializer = LeadStoreSerializer(data=leads_payload, many=True)
         if not lead_serializer.is_valid():
             return error_response('record_store_failed', status.HTTP_422_UNPROCESSABLE_ENTITY, lead_serializer.errors)
@@ -233,10 +253,10 @@ def store_lead(request):
         for lead in leads:
             email_notifications = handle_lead_email_notifications(data, user_timezone, ["parent_email", "team_lead"], email_notifications, "lead_created", lead)
             email_notifications = handle_lead_email_notifications(data, user_timezone, ["assigned_to"], email_notifications, "lead_assigned", lead)
+            web_notifications = handle_lead_web_notifications(data, user_timezone, ["team_lead"], web_notifications, "lead_created", lead)
+            web_notifications = handle_lead_web_notifications(data, user_timezone, ["assigned_to"], web_notifications, "lead_assigned", lead)
 
-
-        if email_notifications:
-            other['notification'] = notification(email_notifications)
+        other['notification'] = notification(email_notifications, web_notifications)
 
     return success_response('record_stored', status.HTTP_201_CREATED, lead_serializer.data, other)
 
@@ -266,6 +286,8 @@ def update_lead(request, pk):
     business_id = data.get('auth_business_id')
     auth_id = data.get('auth_id')
     role_id = data.get('auth_role_id')
+    contact_id = data.get('contact_id')
+    data["contact"] = contact_id
     is_staff = check_if_user_is_staff(data)
     user_timezone = data.get("auth_timezone")
     web_notifications, email_notifications, other = [], [], {}
@@ -290,14 +312,13 @@ def update_lead(request, pk):
         obj_id = base_payload.get(field)
         if obj_id and not model.objects.filter(id=obj_id, business_id=business_id).only('id').exists():
             return error_response(f'{field}_not_found', status.HTTP_404_NOT_FOUND)
-    
+        
+    contact = Contact.objects.filter(business_id=business_id, id=contact_id).first()
+    if not contact:
+        return error_response('contact_not_found', status.HTTP_404_NOT_FOUND)
 
-    contact_serializer = ContactSerializer(instance=lead.contact, data=base_payload)
-    if not contact_serializer.is_valid():
-        return error_response('record_updation_failed', status.HTTP_422_UNPROCESSABLE_ENTITY, contact_serializer.errors)
     
     with transaction.atomic():
-        contact_serializer.save()
         lead_serializer = LeadStoreSerializer(instance=lead, data=base_payload, partial=True)
         if not lead_serializer.is_valid():
             return error_response('record_updation_failed', status.HTTP_422_UNPROCESSABLE_ENTITY, lead_serializer.errors)
@@ -310,9 +331,9 @@ def update_lead(request, pk):
 
         if old_lead_data.assigned_to != updated_lead.assigned_to:
             email_notifications = handle_lead_email_notifications(data, user_timezone, ["assigned_to", "last_activity"], email_notifications, "lead_assigned", lead)
-
-        if email_notifications:
-            other['notification'] = notification(email_notifications)
+            web_notifications = handle_lead_web_notifications(data, user_timezone, ["assigned_to", "last_activity"], web_notifications, "lead_assigned", lead)
+        
+        other['notification'] = notification(email_notifications, web_notifications)
         
 
     return success_response('record_updated', status.HTTP_200_OK, lead_serializer.data, other)
@@ -421,9 +442,10 @@ def change_stage(request, pk):
 
             if template:
                 email_notifications = handle_lead_email_notifications(data, user_timezone, ["team_lead", "assigned_to", "parent_email"], email_notifications, template, lead, stage_reason, remarks)
-            
+                web_notifications = handle_lead_web_notifications(data, user_timezone, ["team_lead", "assigned_to", "parent_email"], web_notifications, template, lead, stage_reason, remarks)
+
             email_notifications = handle_lead_email_notifications(data, user_timezone, ["parent_email"], email_notifications, "parent_trigger_email", lead, stage_reason, remarks)
-            other['notification'] = notification(email_notifications)
+            other['notification'] = notification(email_notifications, web_notifications)
 
         return success_response('lead_stage_changed', status.HTTP_200_OK, [], other)
 
