@@ -1,10 +1,10 @@
-import json
-from rest_framework import status
 from rest_framework.decorators import api_view
-from ..serializers import RolePermissionSerializer
+from rest_framework import status
 from ..models import Module, RolePermission, Permission
-from core.utils.pagination_utils import CustomPagination
+from ..serializers import ModuleSerializer, RolePermissionSerializer
 from core.utils.response_utils import success_response, error_response
+from core.utils.pagination_utils import CustomPagination
+import json
 
 @api_view(['POST'])
 def role_permissions(request, pk):
@@ -52,7 +52,6 @@ def role_permissions(request, pk):
 
     except Exception as e:
         return error_response(str(e), status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 
 
 

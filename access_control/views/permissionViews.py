@@ -1,197 +1,134 @@
-from rest_framework.views import APIView
-from rest_framework import status
 from django.db.models import Q
-
-from rest_framework.decorators import api_view
-
-from ..models import Permission, RolePermission
+from rest_framework import status
 from ..serializers import PermissionSerializer
-
-from core.utils.response_utils import success_response, error_response
+from rest_framework.decorators import api_view
+from ..models import Permission, RolePermission
 from core.utils.pagination_utils import CustomPagination
-
-class PermissionListAPIView(APIView):
-
-    pagination_class = CustomPagination
-
-    def post(self, request):
-
-        queryset = Permission.objects.all()
-        filters = request.data
+from core.utils.date_time_converter import DateTimeConverter
+from core.utils.response_utils import success_response, error_response
 
 
-        if 'search' in filters:
-            queryset = queryset.filter(
-                # Q(name__icontains=filters['search']) |
-                # Q(description__icontains=filters['search']) |
-                # Q.url__icontains=filters['search'] |
-                # Q.key__icontains=filters['search']
-            )
-
-        if 'module_id' in filters:
-            queryset = queryset.filter(module=filters['module_id'])
-
-        if 'type' in filters:
-            queryset = queryset.filter(type=filters['type'])
-
-        if 'is_active' in filters:
-            queryset = queryset.filter(is_active=filters['is_active'])
+def get_queryset():
+    return Permission.objects.filter()
 
 
-        paginator = self.pagination_class()
-        paginated = paginator.paginate_queryset(queryset, request)
-
-        data = PermissionSerializer(paginated, many=True).data
-        response = paginator.get_paginated_response(data)
-
-        return success_response('record_fetched', status.HTTP_200_OK, response)
-
-
-class PermissionRetrieveAPIView(APIView):
-
-    def post(self, request, pk):
-
-        module_id = request.data.get('module_id')
-
-        permission = Permission.objects.filter(
-            id=pk,
-            module=module_id
-        ).first()
-
-        if not permission:
-            return error_response('record_not_found', status.HTTP_404_NOT_FOUND)
-
-        data = PermissionSerializer(permission).data
-
-        return success_response('record_fetched', status.HTTP_200_OK, data)
-
-
-class PermissionCreateAPIView(APIView):
-
-    def post(self, request):
-
-        data = request.data.copy()
-
-        module_id = data.get('module_id')
-        permissions = data.get('permissions', [])
-
-        for p in permissions:
-            p['module'] = module_id
-
-
-        serializer = PermissionSerializer(data=permissions, many=True)
-
-        if serializer.is_valid():
-
-            serializer.save()
-
-            return success_response(
-                'record_stored',
-                status.HTTP_201_CREATED,
-                serializer.data
-            )
-
-        return error_response(
-            'invalid_data',
-            status.HTTP_422_UNPROCESSABLE_ENTITY,
-            serializer.errors
+def apply_filters(self, queryset, filters):
+    """Apply search and filter conditions to the queryset."""
+    search_query = filters.get('search')
+    if search_query:
+        queryset = queryset.filter(
+            Q(name__icontains=search_query) |
+            Q(description__icontains=search_query) |
+            Q(url__icontains=search_query) |
+            Q(key__icontains=search_query)
         )
 
-class PermissionUpdateAPIView(APIView):
+    module = filters.get('module_id')
+    if module:
+        queryset = queryset.filter(module=module)
 
-    def post(self, request, pk):
+    type = filters.get('type')
+    if type is not None:
+        queryset = queryset.filter(type=type)
 
-        module_id = request.data.get('module_id')
+    is_active = filters.get('is_active')
+    if is_active is not None:
+        queryset = queryset.filter(is_active=is_active)
 
-        permission = Permission.objects.filter(
-            id=pk,
-            module=module_id
-        ).first()
-
-        if not permission:
-            return error_response('record_not_found', status.HTTP_404_NOT_FOUND)
-
-        data = request.data.copy()
-        data['module'] = module_id
-
-        serializer = PermissionSerializer(
-            instance=permission,
-            data=data,
-            partial=False
-        )
-
-        if serializer.is_valid():
-
-            serializer.save()
-
-            return success_response(
-                'record_updated',
-                status.HTTP_200_OK,
-                serializer.data
-            )
-
-        return error_response(
-            'invalid_data',
-            status.HTTP_422_UNPROCESSABLE_ENTITY,
-            serializer.errors
-        )
-
-class PermissionDeleteAPIView(APIView):
-
-    def post(self, request, pk):
-
-        module_id = request.data.get('module_id')
-
-        permission = Permission.objects.filter(
-            id=pk,
-            module=module_id
-        ).first()
-
-        if not permission:
-            return error_response('record_not_found', status.HTTP_404_NOT_FOUND)
-
-        permission.delete()
-
-        return success_response('record_deleted', status.HTTP_200_OK)
+    return queryset
 
 
 @api_view(['POST'])
-def change_permission_status(request, pk):
+def get_permissions(request, pk=None):
+    data = request.data
+    timezone = data.get("auth_timezone")
+    queryset = get_queryset()
 
-    module_id = request.data.get('module_id')
+    if pk:
+        permission = queryset.filter(id=pk, module=data.get('module_id')).first()
+        if permission:
+            serialized_data = PermissionSerializer(permission).data
+            serialized_data["created_at"] = DateTimeConverter.from_utc_datetime(serialized_data["created_at"], timezone)
+            serialized_data["updated_at"] = DateTimeConverter.from_utc_datetime(serialized_data["updated_at"], timezone)
+            return success_response('record_fetched', status.HTTP_200_OK, serialized_data)
 
-    permission = Permission.objects.filter(
-        id=pk,
-        module=module_id
-    ).first()
-
-    if not permission:
         return error_response('record_not_found', status.HTTP_404_NOT_FOUND)
 
-    serializer = PermissionSerializer(
-        instance=permission,
-        data=request.data,
-        partial=True
-    )
+    # List view with pagination and filters
+    filters = data
+    queryset = apply_filters(queryset, filters)
+    pagination_class = CustomPagination
+    paginator = pagination_class()
+    paginated_queryset = paginator.paginate_queryset(queryset, request)
+    serialized_data = PermissionSerializer(paginated_queryset, many=True).data
+    for data in serialized_data:
+        data["created_at"] = DateTimeConverter.from_utc_datetime(data["created_at"], timezone)
+        data["updated_at"] = DateTimeConverter.from_utc_datetime(data["updated_at"], timezone)
 
+    response_data = paginator.get_paginated_response(serialized_data)
+    return success_response('record_fetched', status.HTTP_200_OK, response_data)
+
+@api_view(['POST'])
+def store_permission(request):
+    try:
+        data = request.data
+        module_id = data.get("module_id")
+        permissions = data.get("permissions", [])
+
+        # Append module_id to each module
+        for permission in permissions:
+            permission["module"] = module_id
+
+        serializer = PermissionSerializer(data=permissions, many=True)
+        if serializer.is_valid():
+            serializer.save()
+            return success_response('record_stored', status.HTTP_201_CREATED, serializer.data)
+
+        return error_response('record_store_failed', status.HTTP_422_UNPROCESSABLE_ENTITY, serializer.errors)
+
+    except Exception as e:
+        return error_response('server_error', status.HTTP_500_INTERNAL_SERVER_ERROR, str(e))
+
+@api_view(['POST'])
+def update_permission(request, pk=None):
+    data = request.data.copy()
+    try:
+        permission = Permission.objects.get(id=pk, module=data.get("module_id"))
+    except Permission.DoesNotExist:
+        return error_response('record_not_found', status.HTTP_404_NOT_FOUND)
+
+    data['module'] = data.get("module_id")
+    serializer = PermissionSerializer(instance=permission, data=data, partial=False)
     if serializer.is_valid():
-
         serializer.save()
+        return success_response('record_updated', status.HTTP_200_OK, serializer.data)
+    return error_response('record_update_failed', status.HTTP_422_UNPROCESSABLE_ENTITY, serializer.errors)
 
-        return success_response(
-            'record_updated',
-            status.HTTP_200_OK,
-            serializer.data
-        )
-
-    return error_response(
-        'invalid_data',
-        status.HTTP_422_UNPROCESSABLE_ENTITY,
-        serializer.errors
-    )
+@api_view(['POST'])
+def delete_permission(request, pk=None):
+    try:
+        permission = Permission.objects.get(id=pk, module=request.data.get("module_id"))
+        permission.delete()
+        return success_response('record_deleted', status.HTTP_200_OK)
+    except Permission.DoesNotExist:
+        return error_response('record_not_found', status.HTTP_404_NOT_FOUND)
 
 
 @api_view(['POST'])
+def change_permission_status(request, pk=None):
+    try:
+        permission = Permission.objects.get(id=pk, module=request.data.get("module_id"))
+    except Permission.DoesNotExist:
+        return error_response('record_not_found', status.HTTP_404_NOT_FOUND)
+
+    data = request.data
+    serializer = PermissionSerializer(instance=permission, data=data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return success_response('record_updated', status.HTTP_200_OK, serializer.data)
+    return error_response('record_update_failed', status.HTTP_422_UNPROCESSABLE_ENTITY, serializer.errors)
+
+@api_view(["POST"])
 def get_role_based_permissions(request):
     data = request.data
     is_staff = data.get("auth_is_staff")
@@ -203,6 +140,7 @@ def get_role_based_permissions(request):
         permissions = Permission.objects.all()
 
     permission_data = PermissionSerializer(permissions, many=True).data
+
     result = {}
 
     for permission in permission_data:
@@ -225,7 +163,7 @@ def get_role_based_permissions(request):
                 "backend_url": [u.strip() for u in url.split(",") if u.strip()] if url else [],
                 "frontend_url": [u.strip() for u in frontend_url.split(",") if u.strip()] if frontend_url else [],
                 "key": [key] if key else []
-            }        
+            }
 
         #remove duplicates
         for module_data in result.values():
@@ -234,4 +172,3 @@ def get_role_based_permissions(request):
             module_data["key"] = list(set(module_data["key"]))
 
     return success_response('record_fetched', status.HTTP_200_OK, result)
-
