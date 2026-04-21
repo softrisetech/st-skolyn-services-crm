@@ -18,7 +18,9 @@ from leads.utils.lead_utils import (
     get_default_lead_stage_by_priority, 
     generate_unique_code, 
     decrypt_business_id, 
-    handle_lead_email_notifications
+    handle_lead_email_notifications,
+    handle_lead_web_notifications,
+    get_lead_contact_by_cnic
 )
 from django.db.models import (
     Q, 
@@ -214,16 +216,24 @@ def store_lead(request):
 
     base_payload["stage"] = default_stage.id
 
+    # if contact id given in request
     if contact_id:
         contact = Contact.objects.filter(business_id=business_id, id=contact_id).first()
         if not contact:
             return error_response('contact_not_found', status.HTTP_404_NOT_FOUND)
-
+    # if contact id not given in request
     else:
-        # ✅ Validate Contact BEFORE transaction
-        contact_serializer = ContactSerializer(data=base_payload)
-        if not contact_serializer.is_valid():
-            return error_response('record_store_failed', status.HTTP_422_UNPROCESSABLE_ENTITY, contact_serializer.errors)
+        # check for contact already exists in system by father and mother cnic 
+        existing_contact = get_lead_contact_by_cnic(business_id, base_payload.get("father_nic"), base_payload.get("mother_nic"))
+        if existing_contact:
+            contact_id = existing_contact.id
+
+        # if contact not exists in system create new contact
+        if contact_id is None:
+            # ✅ Validate Contact BEFORE transaction
+            contact_serializer = ContactSerializer(data=base_payload)
+            if not contact_serializer.is_valid():
+                return error_response('record_store_failed', status.HTTP_422_UNPROCESSABLE_ENTITY, contact_serializer.errors)
 
     with transaction.atomic():
         if contact_id is None:
@@ -243,10 +253,10 @@ def store_lead(request):
         for lead in leads:
             email_notifications = handle_lead_email_notifications(data, user_timezone, ["parent_email", "team_lead"], email_notifications, "lead_created", lead)
             email_notifications = handle_lead_email_notifications(data, user_timezone, ["assigned_to"], email_notifications, "lead_assigned", lead)
+            web_notifications = handle_lead_web_notifications(data, user_timezone, ["team_lead"], web_notifications, "lead_created", lead)
+            web_notifications = handle_lead_web_notifications(data, user_timezone, ["assigned_to"], web_notifications, "lead_assigned", lead)
 
-
-        if email_notifications:
-            other['notification'] = notification(email_notifications)
+        other['notification'] = notification(email_notifications, web_notifications)
 
     return success_response('record_stored', status.HTTP_201_CREATED, lead_serializer.data, other)
 
@@ -321,9 +331,9 @@ def update_lead(request, pk):
 
         if old_lead_data.assigned_to != updated_lead.assigned_to:
             email_notifications = handle_lead_email_notifications(data, user_timezone, ["assigned_to", "last_activity"], email_notifications, "lead_assigned", lead)
-
-        if email_notifications:
-            other['notification'] = notification(email_notifications)
+            web_notifications = handle_lead_web_notifications(data, user_timezone, ["assigned_to", "last_activity"], web_notifications, "lead_assigned", lead)
+        
+        other['notification'] = notification(email_notifications, web_notifications)
         
 
     return success_response('record_updated', status.HTTP_200_OK, lead_serializer.data, other)
@@ -432,9 +442,10 @@ def change_stage(request, pk):
 
             if template:
                 email_notifications = handle_lead_email_notifications(data, user_timezone, ["team_lead", "assigned_to", "parent_email"], email_notifications, template, lead, stage_reason, remarks)
-            
+                web_notifications = handle_lead_web_notifications(data, user_timezone, ["team_lead", "assigned_to", "parent_email"], web_notifications, template, lead, stage_reason, remarks)
+
             email_notifications = handle_lead_email_notifications(data, user_timezone, ["parent_email"], email_notifications, "parent_trigger_email", lead, stage_reason, remarks)
-            other['notification'] = notification(email_notifications)
+            other['notification'] = notification(email_notifications, web_notifications)
 
         return success_response('lead_stage_changed', status.HTTP_200_OK, [], other)
 
