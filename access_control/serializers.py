@@ -38,18 +38,17 @@ class ModuleSerializer(serializers.ModelSerializer):
     permissions = PermissionSerializer(many=True, read_only=True)
     class Meta:
         model = Module
-        fields = ['id', 'app_id', 'name', 'slug', 'description', 'is_active', 'sort_order', 'permissions', 'created_at', 'updated_at', 'app_slug']
+        fields = ['id','name', 'slug', 'description', 'is_active', 'sort_order', 'permissions', 'created_at', 'updated_at', 'app_slug']
 
     def validate(self, data):
         errors = {}
         name = data.get('name')
-        app_id = data.get('app_id')
 
         if self.instance:
-            if Module.objects.filter(name=name, app_id=app_id).exclude(id=self.instance.id).exists():
+            if Module.objects.filter(name=name).exclude(id=self.instance.id).exists():
                 errors["name"] = ["The name already exists"]
         else:
-            if Module.objects.filter(name=name, app_id=app_id).exists():
+            if Module.objects.filter(name=name).exists():
                 errors["name"] = ["The name already exists"]
 
         if errors:
