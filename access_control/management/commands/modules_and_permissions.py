@@ -524,7 +524,7 @@ PERMISSIONS = [
             {
                 "name": "Read",
                 "url": "lead/session/targets/list, lead/session/targets/{id}/get",
-                "frontend_url": "/crm/session/targets",
+                "frontend_url": "/crm/session-targets",
                 "key": "",
                 "type": 1,
                 "is_active": True,
@@ -532,7 +532,7 @@ PERMISSIONS = [
             {
                 "name": "Create",
                 "url": "lead/session/targets/store",
-                "frontend_url": "/crm/session/targets/add",
+                "frontend_url": "/crm/session-targets/add",
                 "key": "",
                 "type": 1,
                 "is_active": True,
@@ -540,7 +540,7 @@ PERMISSIONS = [
             {
                 "name": "Edit",
                 "url": "lead/session/targets/{id}/update",
-                "frontend_url": "/crm/session/targets/[:id]/edit",
+                "frontend_url": "/crm/session-targets/[:id]/edit",
                 "key": "",
                 "type": 1,
                 "is_active": True,
@@ -548,7 +548,7 @@ PERMISSIONS = [
             {
                 "name": "Delete",
                 "url": "lead/session/targets/{id}/delete",
-                "frontend_url": "/crm/session/targets/[:id]/delete",
+                "frontend_url": "/crm/session-targets/[:id]/delete",
                 "key": "",
                 "type": 1,
                 "is_active": True,
