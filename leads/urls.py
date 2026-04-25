@@ -111,6 +111,14 @@ from .views.preRequisiteViews import (
     delete_lead_pre_requisite
 )
 
+from .views.sessionTargetViews import (
+    get_lead_session_targets, 
+    get_lead_session_target, 
+    store_lead_session_target, 
+    update_lead_session_target, 
+    delete_lead_session_target
+)
+
 from .reports.crm_reports import *
 from .reports.crm_report_exports import *
 
@@ -196,6 +204,12 @@ urlpatterns = [
     path('lead/teams/store', store_lead_team),
     path('lead/teams/<uuid:pk>/update', update_lead_team),
     path('lead/teams/<uuid:pk>/delete', delete_lead_team),
+
+    path('lead/session/targets/list', get_lead_session_targets),
+    path('lead/session/targets/<uuid:pk>/get', get_lead_session_target),
+    path('lead/session/targets/store', store_lead_session_target),
+    path('lead/session/targets/<uuid:pk>/update', update_lead_session_target),
+    path('lead/session/targets/<uuid:pk>/delete', delete_lead_session_target),
 
     path('leads/list', get_leads),
     path('leads/export/', export_leads, name='lead-export'),

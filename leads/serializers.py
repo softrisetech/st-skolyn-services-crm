@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from core.constants.model_constants import STAGE, TEAM, MEDIUM, TAG, SOURCE, CAMPAIGN
-from .models import PreRequisite, PreRequisiteCourse, Institute, Attachment, Lead, FollowUp, Medium, Source, Stage, StageReason, Tag, Campaign, Tracking, FollowUpType, Team, TeamMember, Contact
+from .models import PreRequisite, PreRequisiteCourse, Institute, Attachment, Lead, FollowUp, Medium, Source, Stage, StageReason, Tag, Campaign, Tracking, FollowUpType, Team, TeamMember, Contact, SessionTarget
 
 NAME_ALREADY_EXISTS = "The name already exists"
 
@@ -430,3 +430,27 @@ class LeadExportSerializer(serializers.ModelSerializer):
     def get_stage_name(self, obj):
         stage = obj.get_stage()
         return stage.name if stage else None
+    
+
+class SessionTargetSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SessionTarget
+        fields = ['id', 'business_id', 'branch_id', 'session_id', 'target', 'created_at', 'updated_at']
+
+    def validate(self, data):
+        errors = {}
+        branch_id = data.get('branch_id')
+        session_id = data.get('session_id')
+        business_id = data.get('business_id')
+
+        if self.instance:
+            if SessionTarget.objects.filter(branch_id=branch_id, session_id=session_id, business_id=business_id).exclude(id=self.instance.id).exists():
+                errors["branch_id"] = ["Targets are already defined for this branch and session"]
+        else:
+            if SessionTarget.objects.filter(branch_id=branch_id, session_id=session_id, business_id=business_id).exists():
+                errors["branch_id"] = ["Targets are already defined for this branch and session"]
+
+        if errors:
+            raise serializers.ValidationError(errors)
+
+        return data

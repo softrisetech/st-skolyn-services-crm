@@ -10,7 +10,9 @@ MODULES = [
     {"name": "Contacts", "is_active": True, "app_slug": "crm"},
     {"name": "Leads", "is_active": True, "app_slug": "crm"},
     {"name": "Institutes", "is_active": True, "app_slug": "crm"},
+    {"name": "Session Targets", "is_active": True, "app_slug": "crm"},
     {"name": "Reports", "is_active": True, "app_slug": "crm"},
+
 ]
 
 
@@ -512,6 +514,45 @@ PERMISSIONS = [
                 "type": 1,
                 "is_active": True,
             },
+        ]
+
+    },
+    {
+        "module_name": "Session Targets",
+        "module_app_slug": "crm",
+        "permissions": [
+            {
+                "name": "Read",
+                "url": "lead/session/targets/list, lead/session/targets/{id}/get",
+                "frontend_url": "/crm/session/targets",
+                "key": "",
+                "type": 1,
+                "is_active": True,
+            },
+            {
+                "name": "Create",
+                "url": "lead/session/targets/store",
+                "frontend_url": "/crm/session/targets/add",
+                "key": "",
+                "type": 1,
+                "is_active": True,
+            },
+            {
+                "name": "Edit",
+                "url": "lead/session/targets/{id}/update",
+                "frontend_url": "/crm/session/targets/[:id]/edit",
+                "key": "",
+                "type": 1,
+                "is_active": True,
+            },
+            {
+                "name": "Delete",
+                "url": "lead/session/targets/{id}/delete",
+                "frontend_url": "/crm/session/targets/[:id]/delete",
+                "key": "",
+                "type": 1,
+                "is_active": True,
+            }
         ]
 
     },
