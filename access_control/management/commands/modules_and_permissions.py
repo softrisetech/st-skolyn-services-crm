@@ -38,7 +38,7 @@ PERMISSIONS = [
             {
                 "name": "Edit",
                 "url": "lead/mediums/{id}/update",
-                "frontend_url": "/crm/mediums/edit/[:id]",
+                "frontend_url": "/crm/mediums/[:id]/edit",
                 "key": "",
                 "type": 1,
                 "is_active": True,
@@ -46,7 +46,7 @@ PERMISSIONS = [
             {
                 "name": "Delete",
                 "url": "lead/mediums/{id}/delete",
-                "frontend_url": "/crm/mediums/delete/[:id]",
+                "frontend_url": "/crm/mediums/[:id]/delete",
                 "key": "",
                 "type": 1,
                 "is_active": True,
@@ -77,7 +77,7 @@ PERMISSIONS = [
             {
                 "name": "Edit",
                 "url": "lead/sources/{id}/update",
-                "frontend_url": "/crm/sources/edit/[:id]",
+                "frontend_url": "/crm/sources/[:id]/edit",
                 "key": "",
                 "type": 1,
                 "is_active": True,
@@ -85,7 +85,7 @@ PERMISSIONS = [
             {
                 "name": "Delete",
                 "url": "lead/sources/{id}/delete",
-                "frontend_url": "/crm/sources/delete/[:id]",
+                "frontend_url": "/crm/sources/[:id]/delete",
                 "key": "",
                 "type": 1,
                 "is_active": True,
@@ -116,7 +116,7 @@ PERMISSIONS = [
             {
                 "name": "Edit",
                 "url": "lead/stages/{id}/update",
-                "frontend_url": "/crm/stages/edit/[:id]",
+                "frontend_url": "/crm/stages/[:id]/edit",
                 "key": "",
                 "type": 1,
                 "is_active": True,
@@ -124,7 +124,7 @@ PERMISSIONS = [
             {
                 "name": "Delete",
                 "url": "lead/stages/{id}/delete",
-                "frontend_url": "/crm/stages/delete/[:id]",
+                "frontend_url": "/crm/stages/[:id]/delete",
                 "key": "",
                 "type": 1,
                 "is_active": True,
@@ -155,7 +155,7 @@ PERMISSIONS = [
             {
                 "name": "Edit",
                 "url": "lead/tags/{id}/update",
-                "frontend_url": "/crm/tags/edit/[:id]",
+                "frontend_url": "/crm/tags/[:id]/edit",
                 "key": "",
                 "type": 1,
                 "is_active": True,
@@ -163,7 +163,7 @@ PERMISSIONS = [
             {
                 "name": "Delete",
                 "url": "lead/tags/{id}/delete",
-                "frontend_url": "/crm/tags/delete/[:id]",
+                "frontend_url": "/crm/tags/[:id]/delete",
                 "key": "",
                 "type": 1,
                 "is_active": True,
@@ -194,7 +194,7 @@ PERMISSIONS = [
             {
                 "name": "Edit",
                 "url": "lead/stages/reasons/{id}/update",
-                "frontend_url": "/crm/stage-reasons/edit/[:id]",
+                "frontend_url": "/crm/stage-reasons/[:id]/edit",
                 "key": "",
                 "type": 1,
                 "is_active": True,
@@ -202,7 +202,7 @@ PERMISSIONS = [
             {
                 "name": "Delete",
                 "url": "lead/stages/reasons/{id}/delete",
-                "frontend_url": "/crm/stage-reasons/delete/[:id]",
+                "frontend_url": "/crm/stage-reasons/[:id]/delete",
                 "key": "",
                 "type": 1,
                 "is_active": True,
@@ -233,7 +233,7 @@ PERMISSIONS = [
             {
                 "name": "Edit",
                 "url": "lead/campaigns/{id}/update",
-                "frontend_url": "/crm/campaigns/edit/[:id]",
+                "frontend_url": "/crm/campaigns/[:id]/edit",
                 "key": "",
                 "type": 1,
                 "is_active": True,
@@ -241,7 +241,7 @@ PERMISSIONS = [
             {
                 "name": "Delete",
                 "url": "lead/campaigns/{id}/delete",
-                "frontend_url": "/crm/campaigns/delete/[:id]",
+                "frontend_url": "/crm/campaigns/[:id]/delete",
                 "key": "",
                 "type": 1,
                 "is_active": True,
@@ -272,7 +272,7 @@ PERMISSIONS = [
             {
                 "name": "Edit",
                 "url": "lead/follow-up/types/{id}/update",
-                "frontend_url": "/crm/follow-up-types/edit/[:id]",
+                "frontend_url": "/crm/follow-up-types/[:id]/edit",
                 "key": "",
                 "type": 1,
                 "is_active": True,
@@ -280,7 +280,7 @@ PERMISSIONS = [
             {
                 "name": "Delete",
                 "url": "lead/follow-up/types/{id}/delete",
-                "frontend_url": "/crm/follow-up-types/delete/[:id]",
+                "frontend_url": "/crm/follow-up-types/[:id]/delete",
                 "key": "",
                 "type": 1,
                 "is_active": True,
@@ -311,7 +311,7 @@ PERMISSIONS = [
             {
                 "name": "Edit",
                 "url": "lead/teams/{id}/update",
-                "frontend_url": "/crm/teams/edit/[:id]",
+                "frontend_url": "/crm/teams/[:id]/edit",
                 "key": "",
                 "type": 1,
                 "is_active": True,
@@ -319,7 +319,7 @@ PERMISSIONS = [
             {
                 "name": "Delete",
                 "url": "lead/teams/{id}/delete",
-                "frontend_url": "/crm/teams/delete/[:id]",
+                "frontend_url": "/crm/teams/[:id]/delete",
                 "key": "",
                 "type": 1,
                 "is_active": True,
@@ -389,7 +389,7 @@ PERMISSIONS = [
             {
                 "name": "Edit",
                 "url": "leads/{id}/update, leads/{id}/change/stage",
-                "frontend_url": "/crm/leads/edit/[:id]",
+                "frontend_url": "/crm/leads/[:id]/edit",
                 "key": "",
                 "type": 1,
                 "is_active": True,
@@ -397,7 +397,7 @@ PERMISSIONS = [
             {
                 "name": "Delete",
                 "url": "leads/{id}/delete, leads/{id}/attachment/<uuid:pk>/delete",
-                "frontend_url": "/crm/leads/delete/[:id]",
+                "frontend_url": "/crm/leads/[:id]/delete",
                 "key": "",
                 "type": 1,
                 "is_active": True,
@@ -452,7 +452,7 @@ PERMISSIONS = [
             {
                 "name": "Edit",
                 "url": "lead/institutes/{id}/update",
-                "frontend_url": "/crm/institutes/edit/[:id]",
+                "frontend_url": "/crm/institutes/[:id]/edit",
                 "key": "",
                 "type": 1,
                 "is_active": True,
@@ -460,7 +460,7 @@ PERMISSIONS = [
             {
                 "name": "Delete",
                 "url": "lead/institutes/{id}/delete",
-                "frontend_url": "/crm/institutes/delete/[:id]",
+                "frontend_url": "/crm/institutes/[:id]/delete",
                 "key": "",
                 "type": 1,
                 "is_active": True,
