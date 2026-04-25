@@ -334,7 +334,7 @@ PERMISSIONS = [
             {
                 "name": "Read",
                 "url": "lead/contacts/list, lead/contacts/{id}/get",
-                "frontend_url": "",
+                "frontend_url": "/crm/contacts",
                 "key": "",
                 "type": 1,
                 "is_active": True,
@@ -342,7 +342,7 @@ PERMISSIONS = [
             {
                 "name": "Create",
                 "url": "lead/contacts/store",
-                "frontend_url": "",
+                "frontend_url": "/crm/contacts/add",
                 "key": "",
                 "type": 1,
                 "is_active": True,
@@ -350,7 +350,7 @@ PERMISSIONS = [
             {
                 "name": "Edit",
                 "url": "lead/contacts/{id}/update",
-                "frontend_url": "",
+                "frontend_url": "/crm/contacts/[id]/edit",
                 "key": "",
                 "type": 1,
                 "is_active": True,
@@ -358,7 +358,7 @@ PERMISSIONS = [
             {
                 "name": "Delete",
                 "url": "lead/contacts/{id}/delete",
-                "frontend_url": "",
+                "frontend_url": "/crm/contacts/[id]/delete",
                 "key": "",
                 "type": 1,
                 "is_active": True,
