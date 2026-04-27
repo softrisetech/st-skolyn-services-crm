@@ -47,7 +47,7 @@ from core.utils.helpers import (
 def __queryset(data, business_id):
     filters = {"business_id": business_id}
     is_staff = check_if_user_is_staff(data)
-    if is_staff == "true":
+    if is_staff in ["true", True]:
         user_id = data.get('auth_id')
         role_id = data.get('auth_role_id')
         view_all = LEAD_VIEW_ALL

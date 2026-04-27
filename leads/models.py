@@ -342,3 +342,8 @@ class PreRequisiteCourse(BaseBusinessModel):
     passing_marks = models.IntegerField()
     marks_in_percentage = models.BooleanField()
     is_mandatory = models.BooleanField()
+
+class SessionTarget(BaseBusinessModel):
+    branch_id = models.UUIDField()
+    session_id = models.UUIDField()
+    target = models.IntegerField()

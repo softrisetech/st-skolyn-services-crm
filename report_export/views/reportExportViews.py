@@ -29,7 +29,7 @@ def __get_export_queryset(data, business_id):
     filters = {"business_id": business_id}
     is_staff = check_if_user_is_staff(data)
 
-    if is_staff == "true":
+    if is_staff in ["true", True]:
         user_id = data.get("auth_id")
         role_id = data.get("auth_role_id")
         have_view_all_permission = view_modify_all(user_id, role_id, REPORT_EXPORT_VIEW_ALL)

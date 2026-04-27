@@ -111,7 +111,7 @@ def __queryset(data, business_id, use_report_db=False):
     # Choose which DB to use
     db_alias = 'report_connection' if use_report_db else 'default'    
     
-    if is_staff == "true":
+    if is_staff in ["true", True]:
         user_id = data.get('auth_id')
         role_id = data.get('auth_role_id')
         view_all = LEAD_VIEW_ALL
@@ -299,7 +299,7 @@ def update_lead(request, pk):
         return error_response('lead_not_found', status.HTTP_404_NOT_FOUND)
     old_lead_data = copy.deepcopy(lead) 
     
-    if is_staff == "true":
+    if is_staff in ["true", True]:
         have_modify_all_permission = view_modify_all(auth_id, role_id, LEAD_MODIFY_ALL)
         if str(lead.created_by) != str(auth_id) and not have_modify_all_permission:
             return error_response('permission_denied', status.HTTP_403_FORBIDDEN)
@@ -353,7 +353,7 @@ def delete_lead(request, pk):
     if not lead:
         return error_response('lead_not_found', status.HTTP_404_NOT_FOUND)
 
-    if is_staff == "true":
+    if is_staff in ["true", True]:
         have_modify_all_permission = view_modify_all(auth_id, role_id, LEAD_MODIFY_ALL)
         if str(lead.created_by) != str(auth_id) and not have_modify_all_permission:
             return error_response('permission_denied', status.HTTP_403_FORBIDDEN)
@@ -389,7 +389,7 @@ def change_stage(request, pk):
         return error_response('lead_not_found', status.HTTP_404_NOT_FOUND)
 
     # Permission check
-    if is_staff == "true":
+    if is_staff in ["true", True]:
         if str(lead.created_by) != str(auth_id) and not view_modify_all(auth_id, role_id, LEAD_MODIFY_ALL):
             return error_response('permission_denied', status.HTTP_403_FORBIDDEN)
 

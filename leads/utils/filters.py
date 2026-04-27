@@ -20,17 +20,17 @@ def lead_search_filter(queryset, filters):
     return queryset
 
 def filter_by_branches(queryset, filters):
-    branches = filters.get('branches')
-    if branches:
-        # Ensure branches is a list; if it's a single string, convert it into a list
-        if isinstance(branches, str):
-            branches = branches.split(',')  # Convert to a list after stripping spaces
-        elif isinstance(branches, list):
-            branches = [b.strip() for b in branches if b.strip()]  # Remove empty values
+    branch_ids = filters.get('branch_ids')
+    if branch_ids:
+        # Ensure branch_ids is a list; if it's a single string, convert it into a list
+        if isinstance(branch_ids, str):
+            branch_ids = branch_ids.split(',')  # Convert to a list after stripping spaces
+        elif isinstance(branch_ids, list):
+            branch_ids = [b.strip() for b in branch_ids if b.strip()]  # Remove empty values
 
         # Apply filter if the list is not empty
-        if branches:
-            queryset = queryset.filter(branch_id__in=branches)
+        if branch_ids:
+            queryset = queryset.filter(branch_id__in=branch_ids)
 
     return queryset
 
@@ -246,17 +246,17 @@ def filter_by_converted(queryset, filters):
     return queryset
 
 def filter_by_sessions(queryset, filters):
-    sessions = filters.get('sessions')
-    if sessions:
-        # Ensure sessions is a list; if it's a single string, convert it into a list
-        if isinstance(sessions, str):
-            sessions = sessions.split(',')  # Convert to a list after stripping spaces
-        elif isinstance(sessions, list):
-            sessions = [b.strip() for b in sessions if b.strip()]  # Remove empty values
+    session_ids = filters.get('session_ids')
+    if session_ids:
+        # Ensure session_ids is a list; if it's a single string, convert it into a list
+        if isinstance(session_ids, str):
+            session_ids = session_ids.split(',')  # Convert to a list after stripping spaces
+        elif isinstance(session_ids, list):
+            session_ids = [b.strip() for b in session_ids if b.strip()]  # Remove empty values
 
         # Apply filter if the list is not empty
-        if sessions:
-            queryset = queryset.filter(session_id__in=sessions)
+        if session_ids:
+            queryset = queryset.filter(session_id__in=session_ids)
 
     return queryset
 
