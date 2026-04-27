@@ -14,37 +14,50 @@ def role_permissions(request, pk):
         business_id = data.get('auth_business_id')
         app_slug = data.get('app_slug')
 
-        # Fetch modules with related permissions
-        queryset = Module.objects.filter(app_slug=app_slug, is_active=True).prefetch_related("permissions").all()
-
-        # Get assigned role permissions (IDs only) as a set for fast lookup
-        assigned_permissions = set(
-            RolePermission.objects.filter(business_id=business_id, role_id=pk).values_list("permission_id", flat=True)
+        # ✅ Order modules by sort_order
+        queryset = (
+            Module.objects
+            .filter(app_slug=app_slug, is_active=True)
+            .prefetch_related("permissions")
+            .order_by("sort_order", "id")
         )
 
-        # ✅ Add "checked" key to each permission before serialization
+        # ✅ Assigned permissions set
+        assigned_permissions = set(
+            RolePermission.objects.filter(
+                business_id=business_id,
+                role_id=pk
+            ).values_list("permission_id", flat=True)
+        )
+
         modified_modules = []
+
         for module in queryset:
             modified_module = {
                 "id": module.id,
                 "name": module.name,
+                "sort_order": module.sort_order,
                 "permissions": []
             }
 
-            for permission in module.permissions.filter(is_active=True):
+            # ✅ Order permissions by sort_order
+            permissions = module.permissions.filter(is_active=True).order_by("sort_order", "id")
+
+            for permission in permissions:
                 permission_dict = {
                     "id": permission.id,
                     "module": permission.module_id,
                     "name": permission.name,
-                    "checked": permission.id in assigned_permissions  # ✅ Add checked key
+                    "sort_order": permission.sort_order,
+                    "checked": permission.id in assigned_permissions
                 }
                 modified_module["permissions"].append(permission_dict)
 
             modified_modules.append(modified_module)
 
-        # Apply pagination
+        # ✅ Pagination
         paginator = CustomPagination()
-        paginated_queryset = paginator.paginate_queryset(modified_modules, request)  # ✅ Paginate modified data
+        paginated_queryset = paginator.paginate_queryset(modified_modules, request)
 
         response_data = paginator.get_paginated_response(paginated_queryset)
 
@@ -52,7 +65,6 @@ def role_permissions(request, pk):
 
     except Exception as e:
         return error_response(str(e), status.HTTP_500_INTERNAL_SERVER_ERROR)
-
 
 
 @api_view(['POST'])

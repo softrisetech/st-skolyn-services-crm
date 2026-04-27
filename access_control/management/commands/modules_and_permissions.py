@@ -1,16 +1,16 @@
 MODULES = [
-    {"name": "Mediums", "is_active": True, "app_slug": "crm"},
-    {"name": "Sources", "is_active": True, "app_slug": "crm"},
-    {"name": "Stages", "is_active": True, "app_slug": "crm"},
-    {"name": "Tags", "is_active": True, "app_slug": "crm"},
-    {"name": "Stage Reasons", "is_active": True, "app_slug": "crm"},
-    {"name": "Campaigns", "is_active": True, "app_slug": "crm"},
-    {"name": "Follow Up Types", "is_active": True, "app_slug": "crm"},
-    {"name": "Teams", "is_active": True, "app_slug": "crm"},
-    {"name": "Contacts", "is_active": True, "app_slug": "crm"},
-    {"name": "Leads", "is_active": True, "app_slug": "crm"},
-    {"name": "Institutes", "is_active": True, "app_slug": "crm"},
-    {"name": "Reports", "is_active": True, "app_slug": "crm"},
+    {"name": "Mediums", "is_active": True, "app_slug": "crm", "sort_order": 1},
+    {"name": "Sources", "is_active": True, "app_slug": "crm", "sort_order": 2},
+    {"name": "Stages", "is_active": True, "app_slug": "crm", "sort_order": 3},
+    {"name": "Tags", "is_active": True, "app_slug": "crm", "sort_order": 4},
+    {"name": "Stage Reasons", "is_active": True, "app_slug": "crm", "sort_order": 5},
+    {"name": "Campaigns", "is_active": True, "app_slug": "crm", "sort_order": 6},
+    {"name": "Follow Up Types", "is_active": True, "app_slug": "crm", "sort_order": 7},
+    {"name": "Teams", "is_active": True, "app_slug": "crm", "sort_order": 8},
+    {"name": "Contacts", "is_active": True, "app_slug": "crm", "sort_order": 9},
+    {"name": "Leads", "is_active": True, "app_slug": "crm", "sort_order": 10},
+    {"name": "Institutes", "is_active": True, "app_slug": "crm", "sort_order": 11},
+    {"name": "Reports", "is_active": True, "app_slug": "crm", "sort_order": 12},
 ]
 
 
@@ -26,6 +26,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 1,
             },
             {
                 "name": "Create",
@@ -34,6 +35,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 2,
             },
             {
                 "name": "Edit",
@@ -42,6 +44,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 3,
             },
             {
                 "name": "Delete",
@@ -50,6 +53,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 4,
             }
         ]
 
@@ -65,6 +69,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 1,
             },
             {
                 "name": "Create",
@@ -73,6 +78,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 2,
             },
             {
                 "name": "Edit",
@@ -81,6 +87,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 3,
             },
             {
                 "name": "Delete",
@@ -89,6 +96,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 4,
             }
         ]
 
@@ -104,6 +112,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 1,
             },
             {
                 "name": "Create",
@@ -112,6 +121,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 2,
             },
             {
                 "name": "Edit",
@@ -120,6 +130,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 3,
             },
             {
                 "name": "Delete",
@@ -128,6 +139,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 4,
             }
         ]
 
@@ -143,6 +155,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 1,
             },
             {
                 "name": "Create",
@@ -151,6 +164,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 2,
             },
             {
                 "name": "Edit",
@@ -159,6 +173,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 3,
             },
             {
                 "name": "Delete",
@@ -167,6 +182,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 4,
             }
         ]
 
@@ -182,6 +198,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 1,
             },
             {
                 "name": "Create",
@@ -190,6 +207,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 2,
             },
             {
                 "name": "Edit",
@@ -198,6 +216,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 3,
             },
             {
                 "name": "Delete",
@@ -206,6 +225,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 4,
             }
         ]
 
@@ -221,6 +241,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 1,
             },
             {
                 "name": "Create",
@@ -229,6 +250,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 2,
             },
             {
                 "name": "Edit",
@@ -237,6 +259,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 3,
             },
             {
                 "name": "Delete",
@@ -245,6 +268,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 4,
             }
         ]
 
@@ -260,6 +284,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 1,
             },
             {
                 "name": "Create",
@@ -268,6 +293,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 2,
             },
             {
                 "name": "Edit",
@@ -276,6 +302,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 3,
             },
             {
                 "name": "Delete",
@@ -284,6 +311,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 4,
             }
         ]
 
@@ -299,6 +327,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 1,
             },
             {
                 "name": "Create",
@@ -307,6 +336,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 2,
             },
             {
                 "name": "Edit",
@@ -315,6 +345,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 3,
             },
             {
                 "name": "Delete",
@@ -323,6 +354,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 4,
             }
         ]
 
@@ -338,6 +370,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 1,
             },
             {
                 "name": "Create",
@@ -346,6 +379,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 2,
             },
             {
                 "name": "Edit",
@@ -354,6 +388,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 3,
             },
             {
                 "name": "Delete",
@@ -362,6 +397,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 4,
             }
         ]
 
@@ -377,6 +413,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 1,
             },
             {
                 "name": "Create",
@@ -385,6 +422,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 2,
             },
             {
                 "name": "Edit",
@@ -393,6 +431,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 3,
             },
             {
                 "name": "Delete",
@@ -401,22 +440,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
-            },
-            {
-                "name": "View All",
-                "url": "",
-                "frontend_url": "",
-                "key": "lead-view-all",
-                "type": 2,
-                "is_active": True,
-            },
-            {
-                "name": "Modify All",
-                "url": "",
-                "frontend_url": "",
-                "key": "lead-modify-all",
-                "type": 2,
-                "is_active": True,
+                "sort_order": 4,
             },
             {
                 "name": "Branch Wise",
@@ -425,7 +449,26 @@ PERMISSIONS = [
                 "key": "branch-wise-leads",
                 "type": 2,
                 "is_active": True,
-            }
+                "sort_order": 5,
+            },
+            {
+                "name": "View All",
+                "url": "",
+                "frontend_url": "",
+                "key": "lead-view-all",
+                "type": 2,
+                "is_active": True,
+                "sort_order": 6,
+            },
+            {
+                "name": "Modify All",
+                "url": "",
+                "frontend_url": "",
+                "key": "lead-modify-all",
+                "type": 2,
+                "is_active": True,
+                "sort_order": 7,
+            },
         ]
 
     },
@@ -440,6 +483,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 1,
             },
             {
                 "name": "Create",
@@ -448,6 +492,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 2,
             },
             {
                 "name": "Edit",
@@ -456,6 +501,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 3,
             },
             {
                 "name": "Delete",
@@ -464,6 +510,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 4,
             }
         ]
 
@@ -479,6 +526,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 1
             },
             {
                 "name": "No Follow Up Leads",
@@ -487,6 +535,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 2
             },
             {
                 "name": "Upcoming Follow Ups",
@@ -495,6 +544,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 3
             },
             {
                 "name": "Overdue Follow Ups",
@@ -503,6 +553,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 4
             },
             {
                 "name": "Lost Leads",
@@ -511,6 +562,7 @@ PERMISSIONS = [
                 "key": "",
                 "type": 1,
                 "is_active": True,
+                "sort_order": 5
             },
         ]
 
