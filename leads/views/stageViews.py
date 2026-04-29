@@ -106,6 +106,11 @@ def update_lead_stage(request, pk=None):
 
     if stage.type != data["type"] and check_if_stage_is_last_of_its_type(stage):
         return error_response('last_stage_updation_not_allowed', status.HTTP_422_UNPROCESSABLE_ENTITY)
+    
+    if check_if_stage_is_last_of_its_type(stage):
+        if data["is_active"] == False:
+            return error_response('last_stage_inactive_not_allowed', status.HTTP_422_UNPROCESSABLE_ENTITY)
+
 
     if is_default:
         Stage.objects.filter(business_id=business_id, is_default=True).update(is_default=False)
