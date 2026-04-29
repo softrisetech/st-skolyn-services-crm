@@ -80,6 +80,9 @@ def store_lead_stage(request):
     if is_default:
         Stage.objects.filter(business_id=business_id, is_default=True).update(is_default=False)
 
+    if data["type"] in [WON, LOST]:
+        return error_response('you_cannot_create_these_stage_types', status.HTTP_422_UNPROCESSABLE_ENTITY)
+
     total_stages = Stage.objects.filter(business_id=business_id).count()
     if total_stages >= 10:
         return error_response('max_stage_limit_reached', status.HTTP_422_UNPROCESSABLE_ENTITY)
@@ -104,13 +107,25 @@ def update_lead_stage(request, pk=None):
     data['business_id'] = business_id
     is_default = data.get('is_default')
 
-    if stage.type != data["type"] and check_if_stage_is_last_of_its_type(stage):
-        return error_response('last_stage_updation_not_allowed', status.HTTP_422_UNPROCESSABLE_ENTITY)
-    
-    if check_if_stage_is_last_of_its_type(stage):
-        if data["is_active"] == False:
-            return error_response('last_stage_inactive_not_allowed', status.HTTP_422_UNPROCESSABLE_ENTITY)
+    is_last_stage = check_if_stage_is_last_of_its_type(stage)
+    new_type = data.get("type")
+    is_active = data.get("is_active")
 
+    # normalize is_active once
+    is_deactivating = str(is_active).lower() in ["0", "false"]
+
+    if is_last_stage:
+        if stage.type != new_type:
+            return error_response(
+                'last_stage_updation_not_allowed',
+                status.HTTP_422_UNPROCESSABLE_ENTITY
+            )
+
+        if is_deactivating:
+            return error_response(
+                'last_stage_inactive_not_allowed',
+                status.HTTP_422_UNPROCESSABLE_ENTITY
+            )
 
     if is_default:
         Stage.objects.filter(business_id=business_id, is_default=True).update(is_default=False)
