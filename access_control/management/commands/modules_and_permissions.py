@@ -412,7 +412,7 @@ PERMISSIONS = [
                 "name": "Read",
                 "url": "leads/list, leads/{id}/get",
                 "frontend_url": "/crm/leads",
-                "key": "",
+                "key": "lead-read",
                 "type": 1,
                 "is_active": True,
                 "sort_order": 1,
