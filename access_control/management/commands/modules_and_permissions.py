@@ -1,8 +1,8 @@
 MODULES = [
     {"name": "Mediums", "is_active": True, "app_slug": "crm", "sort_order": 1},
     {"name": "Sources", "is_active": True, "app_slug": "crm", "sort_order": 2},
-    {"name": "Stages", "is_active": True, "app_slug": "crm", "sort_order": 3},
     {"name": "Tags", "is_active": True, "app_slug": "crm", "sort_order": 4},
+    {"name": "Stages", "is_active": True, "app_slug": "crm", "sort_order": 3},
     {"name": "Stage Reasons", "is_active": True, "app_slug": "crm", "sort_order": 5},
     {"name": "Campaigns", "is_active": True, "app_slug": "crm", "sort_order": 6},
     {"name": "Follow Up Types", "is_active": True, "app_slug": "crm", "sort_order": 7},
