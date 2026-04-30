@@ -33,7 +33,8 @@ from core.utils.response_utils import (
     error_response
 )
 from core.utils.notification_utils import (
-    notification
+    notification,
+    notification_obj
 )
 from core.constants.model_constants import (
     STAGE, 
@@ -53,7 +54,8 @@ from ..serializers import (
     LeadGetSerializer, 
     KanbanLeadSerializer, 
     LeadImportSerializer, 
-    ContactSerializer
+    ContactSerializer,
+    LeadQuickEmailSerializer
 )
 from access_control.utils.permission_helpers import (
     view_branch_wise, 
@@ -857,6 +859,33 @@ def validate_import_leads(request):
         status.HTTP_200_OK,
         {'message': 'All leads are valid.'}
     )
+
+
+@api_view(["POST"])
+def send_quick_email(request):
+    data = request.data.copy()
+    data["business_id"] = data.get("auth_business_id")
+    other = {}
+    serializer = LeadQuickEmailSerializer(data=data)
+    if not serializer.is_valid():
+        return error_response('record_store_failed', status.HTTP_422_UNPROCESSABLE_ENTITY, serializer.errors)
+    serializer.save()
+
+    other['notification'] = notification(notification_obj(
+        "send_lead_quick_email",
+        data["recipients"],
+        {
+            "business_id": data["business_id"],
+            "subject": data["subject"],
+            "message": data["message"]
+        }
+
+    ))
+
+    return success_response('lead_quick_email_send', status.HTTP_201_CREATED, [], other)
+
+
+
 
 
 def store_leads_attachments(business_id, leads, attachments):

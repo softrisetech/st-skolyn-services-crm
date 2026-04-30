@@ -347,3 +347,8 @@ class SessionTarget(BaseBusinessModel):
     branch_id = models.UUIDField()
     session_id = models.UUIDField()
     target = models.IntegerField()
+
+class QuickEmail(BaseBusinessModel):
+    recipients = models.JSONField()
+    subject = models.CharField(max_length=CHAR_LENGTH)
+    message = models.TextField(max_length=LONG_TEXT_LENGTH)

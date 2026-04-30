@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from core.constants.model_constants import STAGE, TEAM, MEDIUM, TAG, SOURCE, CAMPAIGN
-from .models import PreRequisite, PreRequisiteCourse, Institute, Attachment, Lead, FollowUp, Medium, Source, Stage, StageReason, Tag, Campaign, Tracking, FollowUpType, Team, TeamMember, Contact, SessionTarget
+from .models import PreRequisite, PreRequisiteCourse, Institute, Attachment, Lead, FollowUp, Medium, Source, Stage, StageReason, Tag, Campaign, Tracking, FollowUpType, Team, TeamMember, Contact, SessionTarget, QuickEmail
 
 NAME_ALREADY_EXISTS = "The name already exists"
 
@@ -454,3 +454,8 @@ class SessionTargetSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(errors)
 
         return data
+    
+class LeadQuickEmailSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = QuickEmail
+        fields = ["id", "business_id", "recipients", "subject", "message", "created_at", "updated_at"]

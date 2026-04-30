@@ -67,7 +67,8 @@ from .views.leadViews import (
     generate_leads,
     export_leads,
     import_leads,
-    validate_import_leads
+    validate_import_leads,
+    send_quick_email
 )
 from .views.stageReasonViews import (
     get_stage_reasons, 
@@ -224,6 +225,8 @@ urlpatterns = [
     path('leads/generate', generate_leads),
     path('leads/import', import_leads),
     path('leads/validate/import', validate_import_leads),
+    path('leads/quick/email', send_quick_email),
+
 
 
     path('lead/<uuid:lead_id>/follow-ups/list', get_lead_follow_ups),
