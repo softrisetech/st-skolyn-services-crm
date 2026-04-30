@@ -52,8 +52,13 @@ def __queryset(data, business_id):
         role_id = data.get('auth_role_id')
         view_all = LEAD_VIEW_ALL
         branch_wise = LEAD_BRANCH_WISE
+        have_read_permission = view_modify_all(user_id, role_id, LEAD_READ)
         have_view_all_permission = view_modify_all(user_id, role_id, view_all)
         have_branch_wise_permission = view_branch_wise(user_id, role_id, branch_wise)
+
+        if not have_read_permission:
+            return Lead.objects.none()
+        
         queryset = Lead.objects.filter(**filters)
 
         if not have_view_all_permission:
@@ -144,14 +149,16 @@ def get_leads_funnel(request):
     total_leads = queryset.count()
 
     # 🔹 Get ALL lost stages
-    lost_stage_ids = Stage.objects.filter(
-        business_id=business_id,
-        type=LOST
-    ).values_list("id", flat=True)
+    # lost_stage_ids = Stage.objects.filter(
+    #     business_id=business_id,
+    #     type=LOST
+    # ).values_list("id", flat=True)
 
     # Exclude all lost + NULL
     queryset = queryset.exclude(
-        Q(stage__id__in=lost_stage_ids) | Q(stage__isnull=True)
+        # Q(stage__id__in=lost_stage_ids) | Q(stage__isnull=True)
+        Q(stage__isnull=True)
+
     )
 
 

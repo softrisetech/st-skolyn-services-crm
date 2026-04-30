@@ -1,6 +1,7 @@
 LEAD_VIEW_ALL="lead-view-all"
 LEAD_MODIFY_ALL="lead-modify-all"
 LEAD_BRANCH_WISE="branch-wise-leads"
+LEAD_READ="lead-read"
 CAMPAIGN_VIEW_ALL="campaign-view-all"
 CAMPAIGN_MODIFY_ALL="campaign-modify-all"
 REPORT_EXPORT_VIEW_ALL="report_export_view_all_crm"
