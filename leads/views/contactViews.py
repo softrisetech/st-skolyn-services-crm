@@ -23,9 +23,11 @@ def __apply_filters(queryset, filters):
             Q(father_last_name__icontains=search_query) |
             Q(father_email__icontains=search_query) |
             Q(father_nic__icontains=search_query) |
+            Q(father_contact_number__icontains=search_query) |
             Q(mother_first_name__icontains=search_query) |
             Q(mother_last_name__icontains=search_query) |
             Q(mother_email__icontains=search_query) |
+            Q(mother_contact_number__icontains=search_query) |
             Q(mother_nic__icontains=search_query)  
         )
     queryset = filter_by_sort_order(queryset, filters)
