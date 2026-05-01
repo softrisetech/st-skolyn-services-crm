@@ -6,14 +6,11 @@ NAME_ALREADY_EXISTS = "The name already exists"
 
 
 class ContactSerializer(serializers.ModelSerializer):
-    father_name = serializers.SerializerMethodField(read_only=True)
-    mother_name = serializers.SerializerMethodField(read_only=True)
-
     class Meta:
         model = Contact
         fields = [
-            "id", "business_id", "father_name", "father_first_name", "father_last_name", "father_contact_number", "father_email", "father_nic", "is_father_applicable",
-            "mother_name", "mother_first_name", "mother_last_name", "mother_contact_number", "mother_email", "mother_nic", "is_mother_applicable", "created_at", "updated_at"
+            "id", "business_id", "father_first_name", "father_last_name", "father_contact_number", "father_email", "father_nic", "is_father_applicable",
+            "mother_first_name", "mother_last_name", "mother_contact_number", "mother_email", "mother_nic", "is_mother_applicable", "created_at", "updated_at"
         ]
 
     def validate(self, data):
@@ -42,12 +39,6 @@ class ContactSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(errors)
 
         return data
-    
-    def get_father_name(self, obj):
-        return f"{obj.father_first_name or ''} {obj.father_last_name or ''}".strip()
-    
-    def get_mother_name(self, obj):
-        return f"{obj.mother_first_name or ''} {obj.mother_last_name or ''}".strip()
 
 class AttachmentSerializer(serializers.ModelSerializer):
     class Meta:
@@ -62,17 +53,13 @@ class LeadListSerializer(serializers.ModelSerializer):
     team_name = serializers.CharField(source="team.name", read_only=True)
     campaign_name = serializers.CharField(source="campaign.name", read_only=True)
     contact = ContactSerializer(read_only=True)
-    name = serializers.SerializerMethodField(read_only=True)
     class Meta:
         model = Lead
         fields = [
                     "id", "business_id", "branch_id", "session_id", "class_id", "medium", "medium_name", "source", "source_name", "stage", "stage_name", "tag", "tag_name", "team", "team_name", "campaign", "campaign_name", "contact", "code", "created_by", "assigned_to", "country_id",
-                    "state_id", "city_id", "name", "first_name", "last_name", "priority", "date_of_birth", "contact_number",
+                    "state_id", "city_id", "first_name", "last_name", "priority", "date_of_birth", "contact_number",
                     "email", "nic", "gender", "ethnicity", "remarks", "is_imported", "imported_at", "created_at", "updated_at"
                 ]
-        
-    def get_name(self, obj):
-        return f"{obj.first_name or ''} {obj.last_name or ''}".strip()
         
 class LeadGetSerializer(serializers.ModelSerializer):
     medium_name = serializers.CharField(source="medium.name", read_only=True)
@@ -83,22 +70,17 @@ class LeadGetSerializer(serializers.ModelSerializer):
     campaign_name = serializers.CharField(source="campaign.name", read_only=True)
     contact = ContactSerializer(read_only=True)
     attachments = serializers.SerializerMethodField()
-    name = serializers.SerializerMethodField(read_only=True)
-
     class Meta:
         model = Lead
         fields = [
                     "id", "business_id", "branch_id", "session_id", "class_id", "medium", "medium_name", "source", "source_name", "stage", "stage_name", "tag", "tag_name", "team", "team_name", "campaign", "campaign_name", "contact", "code", "created_by", "assigned_to", "country_id",
-                    "state_id", "city_id", "name", "first_name", "last_name", "priority", "date_of_birth", "contact_number",
+                    "state_id", "city_id", "first_name", "last_name", "priority", "date_of_birth", "contact_number",
                     "email", "nic", "gender", "ethnicity", "remarks", "is_imported", "imported_at", "created_at", "updated_at", "attachments"
                 ]
         
     def get_attachments(self, obj):
         attachments = obj.get_attachments()
         return attachments if attachments else []
-    
-    def get_name(self, obj):
-        return f"{obj.first_name or ''} {obj.last_name or ''}".strip()
         
 class LeadStoreSerializer(serializers.ModelSerializer):
     parent_contact = ContactSerializer(source="contact", read_only=True)
@@ -114,14 +96,10 @@ class LeadStoreSerializer(serializers.ModelSerializer):
 
 class KanbanLeadSerializer(serializers.ModelSerializer):
     source_name = serializers.CharField(source="source.name", read_only=True)
-    name = serializers.SerializerMethodField(read_only=True)
-
     class Meta:
         model = Lead
         fields = ['id', 'business_id', 'source_name', 'first_name', 'last_name', 'priority', 'session_id', 'branch_id', 'assigned_to']
 
-    def get_name(self, obj):
-        return f"{obj.first_name or ''} {obj.last_name or ''}".strip()
 
 class FollowUpSerializer(serializers.ModelSerializer):
     date_time = serializers.DateTimeField(format='%Y-%m-%d %H:%M:%S')

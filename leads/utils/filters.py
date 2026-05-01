@@ -1,6 +1,8 @@
 from django.db.models import Q
 from datetime import datetime, time
 from core.utils.date_time_converter import DateTimeConverter
+from django.db.models import Value
+from django.db.models.functions import Concat, Coalesce
 
 def lead_search_filter(queryset, filters):
     search_query = filters.get('search')
@@ -375,6 +377,30 @@ def filter_by_sort_order(queryset, filters):
     sort_order = filters.get('sort_order')
 
     if sort_by:
+        if sort_by == "full_name":
+            queryset = queryset.annotate(
+                name=Concat(
+                    Coalesce('first_name', Value('')),
+                    Value(' '),
+                    Coalesce('last_name', Value(''))
+                )
+            )
+        elif sort_by == "father_full_name":
+            queryset = queryset.annotate(
+                name=Concat(
+                    Coalesce('father_first_name', Value('')),
+                    Value(' '),
+                    Coalesce('father_last_name', Value(''))
+                )
+            )
+        elif sort_by == "mother_full_name":
+            queryset = queryset.annotate(
+                name=Concat(
+                    Coalesce('mother_first_name', Value('')),
+                    Value(' '),
+                    Coalesce('mother_last_name', Value(''))
+                )
+            )
         if sort_order == 'desc':
             sort_by = f'-{sort_by}'
         queryset = queryset.order_by(sort_by)
