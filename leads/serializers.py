@@ -62,7 +62,7 @@ class LeadListSerializer(serializers.ModelSerializer):
                     "email", "nic", "gender", "ethnicity", "remarks", "is_imported", "imported_at", "created_at", "updated_at"
                 ]
         
-    def get_full_name(self, obj):
+    def get_name(self, obj):
         return f"{obj.first_name or ''} {obj.last_name or ''}".strip()
         
 class LeadGetSerializer(serializers.ModelSerializer):
@@ -88,7 +88,7 @@ class LeadGetSerializer(serializers.ModelSerializer):
         attachments = obj.get_attachments()
         return attachments if attachments else []
     
-    def get_full_name(self, obj):
+    def get_name(self, obj):
         return f"{obj.first_name or ''} {obj.last_name or ''}".strip()
         
 class LeadStoreSerializer(serializers.ModelSerializer):
@@ -111,7 +111,7 @@ class KanbanLeadSerializer(serializers.ModelSerializer):
         model = Lead
         fields = ['id', 'business_id', 'source_name', 'first_name', 'last_name', 'priority', 'session_id', 'branch_id', 'assigned_to']
 
-    def get_full_name(self, obj):
+    def get_name(self, obj):
         return f"{obj.first_name or ''} {obj.last_name or ''}".strip()
 
 class FollowUpSerializer(serializers.ModelSerializer):
