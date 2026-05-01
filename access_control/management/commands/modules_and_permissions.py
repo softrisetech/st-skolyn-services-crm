@@ -2,6 +2,7 @@ MODULES = [
     {"name": "Contacts", "is_active": True, "app_slug": "crm"},
     {"name": "Leads", "is_active": True, "app_slug": "crm"},
     {"name": "Reports", "is_active": True, "app_slug": "crm"},
+    {"name": "Report Exports", "is_active": True, "app_slug": "crm"},
     {"name": "Teams", "is_active": True, "app_slug": "crm"},
     {"name": "Mediums", "is_active": True, "app_slug": "crm"},
     {"name": "Sources", "is_active": True, "app_slug": "crm"},
@@ -652,6 +653,32 @@ PERMISSIONS = [
                 "is_active": True,
                 "sort_order": 4
             }
+        ]
+
+    },
+    {
+        "module_name": "Report Exports",
+        "module_app_slug": "crm",
+        "permissions": [
+            {
+                "name": "Read",
+                "url": "report-exports/crm/, report-export/{id}/",
+                "frontend_url": "/crm/report-exports",
+                "key": "",
+                "type": 1,
+                "is_active": True,
+                "sort_order": 1,
+            },
+            {
+                "name": "View All",
+                "url": "",
+                "frontend_url": "",
+                "key": "report-export-view-all",
+                "type": 2,
+                "is_active": True,
+                "sort_order": 2,
+            },
+            
         ]
 
     },
