@@ -165,7 +165,7 @@ def get_leads_funnel(request):
     # Get active stages in order of priority
     active_stages = list(
         Stage.objects.filter(is_active=True, business_id=business_id)
-        .exclude(type=LOST)
+        # .exclude(type=LOST)
         .order_by("priority")
         .values("name", "type")
     )
