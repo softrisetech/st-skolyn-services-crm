@@ -523,7 +523,7 @@ PERMISSIONS = [
         "module_app_slug": "crm",
         "permissions": [
             {
-                "name": "No Follow Up Leads (High Priority)",
+                "name": "High Priority Pending Follow-Ups",
                 "url": "reports/high-priority-no-followup",
                 "frontend_url": "/crm/reports/high-priority",
                 "key": "",
@@ -532,7 +532,7 @@ PERMISSIONS = [
                 "sort_order": 1
             },
             {
-                "name": "No Follow Up Leads",
+                "name": "Pending Follow-Ups",
                 "url": "reports/no-followup-leads",
                 "frontend_url": "/crm/reports/no-followup-leads",
                 "key": "",
@@ -541,7 +541,7 @@ PERMISSIONS = [
                 "sort_order": 2
             },
             {
-                "name": "Upcoming Follow Ups",
+                "name": "Upcoming Follow-Ups",
                 "url": "reports/upcoming-followups",
                 "frontend_url": "/crm/reports/upcoming-followups",
                 "key": "",
@@ -550,7 +550,7 @@ PERMISSIONS = [
                 "sort_order": 3
             },
             {
-                "name": "Overdue Follow Ups",
+                "name": "Overdue Follow-Ups",
                 "url": "reports/overdue-followups",
                 "frontend_url": "/crm/reports/overdue-followups",
                 "key": "",
@@ -559,7 +559,7 @@ PERMISSIONS = [
                 "sort_order": 4
             },
             {
-                "name": "Lost Leads",
+                "name": "Lost Leads Analysis",
                 "url": "reports/lost-leads",
                 "frontend_url": "/crm/reports/lost-leads",
                 "key": "",
