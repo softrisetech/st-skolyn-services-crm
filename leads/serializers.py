@@ -6,11 +6,14 @@ NAME_ALREADY_EXISTS = "The name already exists"
 
 
 class ContactSerializer(serializers.ModelSerializer):
+    father_name = serializers.SerializerMethodField(read_only=True)
+    mother_name = serializers.SerializerMethodField(read_only=True)
+
     class Meta:
         model = Contact
         fields = [
-            "id", "business_id", "father_first_name", "father_last_name", "father_contact_number", "father_email", "father_nic", "is_father_applicable",
-            "mother_first_name", "mother_last_name", "mother_contact_number", "mother_email", "mother_nic", "is_mother_applicable", "created_at", "updated_at"
+            "id", "business_id", "father_name", "father_first_name", "father_last_name", "father_contact_number", "father_email", "father_nic", "is_father_applicable",
+            "mother_name", "mother_first_name", "mother_last_name", "mother_contact_number", "mother_email", "mother_nic", "is_mother_applicable", "created_at", "updated_at"
         ]
 
     def validate(self, data):
@@ -39,6 +42,12 @@ class ContactSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(errors)
 
         return data
+    
+    def get_father_name(self, obj):
+        return f"{obj.father_first_name or ''} {obj.father_last_name or ''}".strip()
+    
+    def get_mother_name(self, obj):
+        return f"{obj.mother_first_name or ''} {obj.mother_last_name or ''}".strip()
 
 class AttachmentSerializer(serializers.ModelSerializer):
     class Meta:
