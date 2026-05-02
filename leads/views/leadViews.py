@@ -951,6 +951,8 @@ def prepare_leads_to_store(data):
     emails = data.get("emails")
     nics = data.get("nics")
     genders = data.get("genders")
+    ethnicities = data.get("ethnicities")
+
 
     lead_data_list = []
     iternations = len(first_names)
@@ -976,6 +978,7 @@ def prepare_leads_to_store(data):
             "email": emails[index] if index < len(emails) else None,
             "nic": nics[index] if index < len(nics) else None,
             "gender": genders[index] if index < len(genders) else None,
+            "ethnicity": ethnicities[index] if index < len(ethnicities) else None,
             "ethnicity": data.get("ethnicity"),
             "remarks": data.get("remarks"),
             "created_by": data.get("auth_id"),
