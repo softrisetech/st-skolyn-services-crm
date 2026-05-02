@@ -979,7 +979,6 @@ def prepare_leads_to_store(data):
             "nic": nics[index] if index < len(nics) else None,
             "gender": genders[index] if index < len(genders) else None,
             "ethnicity": ethnicities[index] if index < len(ethnicities) else None,
-            "ethnicity": data.get("ethnicity"),
             "remarks": data.get("remarks"),
             "created_by": data.get("auth_id"),
             "assigned_to": data.get("assigned_to"),
