@@ -72,3 +72,17 @@ def export_lost_leads(request):
         return success_response('record_fetched', status.HTTP_200_OK, result)
     except Exception as e:
         return error_response(str(e), status.HTTP_500_INTERNAL_SERVER_ERROR)
+    
+    
+@api_view(['POST'])
+@access_control_middleware
+def export_contacts(request):
+    data = request.data.copy()
+    try:
+        data["report_type"] = constants()["report_type"]["crm"]["contacts"]
+        entry = asyncio.run(export_entry(data))
+        data["export_entry_id"] = entry.id
+        result = export_obj(data["report_type"], data)
+        return success_response('record_fetched', status.HTTP_200_OK, result)
+    except Exception as e:
+        return error_response(str(e), status.HTTP_500_INTERNAL_SERVER_ERROR)

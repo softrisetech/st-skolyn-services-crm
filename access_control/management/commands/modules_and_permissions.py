@@ -401,7 +401,16 @@ PERMISSIONS = [
                 "type": 1,
                 "is_active": True,
                 "sort_order": 4,
-            }
+            },
+            {
+                "name": "Contacts Export",
+                "url": "reports/export/contacts/",
+                "frontend_url": "/crm/lead-contacts-exports",
+                "key": "",
+                "type": 1,
+                "is_active": True,
+                "sort_order": 5
+            },
         ]
 
     },
@@ -446,13 +455,22 @@ PERMISSIONS = [
                 "sort_order": 4,
             },
             {
+                "name": "Leads Export",
+                "url": "leads/export/",
+                "frontend_url": "/crm/leads/export",
+                "key": "",
+                "type": 1,
+                "is_active": True,
+                "sort_order": 5
+            },
+            {
                 "name": "Branch Wise",
                 "url": "",
                 "frontend_url": "",
                 "key": "branch-wise-leads",
                 "type": 2,
                 "is_active": True,
-                "sort_order": 5,
+                "sort_order": 6,
             },
             {
                 "name": "View All",
@@ -461,7 +479,7 @@ PERMISSIONS = [
                 "key": "lead-view-all",
                 "type": 2,
                 "is_active": True,
-                "sort_order": 6,
+                "sort_order": 7,
             },
             {
                 "name": "Modify All",
@@ -470,7 +488,7 @@ PERMISSIONS = [
                 "key": "lead-modify-all",
                 "type": 2,
                 "is_active": True,
-                "sort_order": 7,
+                "sort_order": 8,
             },
         ]
 
@@ -532,9 +550,27 @@ PERMISSIONS = [
                 "sort_order": 1
             },
             {
+                "name": "High Priority Exports",
+                "url": "reports/export/high-priority-no-followup/",
+                "frontend_url": "/crm/reports/high-priority-exports",
+                "key": "",
+                "type": 1,
+                "is_active": True,
+                "sort_order": 1
+            },
+            {
                 "name": "Pending Follow-Ups",
                 "url": "reports/no-followup-leads",
                 "frontend_url": "/crm/reports/no-followup-leads",
+                "key": "",
+                "type": 1,
+                "is_active": True,
+                "sort_order": 2
+            },
+            {
+                "name": "Pending Follow-Ups Export",
+                "url": "reports/export/no-followup-leads/",
+                "frontend_url": "/crm/reports/no-followup-leads-exports",
                 "key": "",
                 "type": 1,
                 "is_active": True,
@@ -550,6 +586,15 @@ PERMISSIONS = [
                 "sort_order": 3
             },
             {
+                "name": "Upcoming Follow-Ups Export",
+                "url": "reports/export/upcoming-followups/",
+                "frontend_url": "/crm/reports/upcoming-followups-exports",
+                "key": "",
+                "type": 1,
+                "is_active": True,
+                "sort_order": 3
+            },
+            {
                 "name": "Overdue Follow-Ups",
                 "url": "reports/overdue-followups",
                 "frontend_url": "/crm/reports/overdue-followups",
@@ -559,9 +604,27 @@ PERMISSIONS = [
                 "sort_order": 4
             },
             {
+                "name": "Overdue Follow-Ups Export",
+                "url": "reports/export/overdue-followups/",
+                "frontend_url": "/crm/reports/overdue-followups-exports",
+                "key": "",
+                "type": 1,
+                "is_active": True,
+                "sort_order": 4
+            },
+            {
                 "name": "Lost Leads Analysis",
                 "url": "reports/lost-leads",
                 "frontend_url": "/crm/reports/lost-leads",
+                "key": "",
+                "type": 1,
+                "is_active": True,
+                "sort_order": 5
+            },
+            {
+                "name": "Lost Leads Export",
+                "url": "reports/export/lost-leads/",
+                "frontend_url": "/crm/reports/lost-leads-exports",
                 "key": "",
                 "type": 1,
                 "is_active": True,
