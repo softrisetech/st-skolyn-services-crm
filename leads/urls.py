@@ -147,6 +147,7 @@ urlpatterns = [
     path('reports/export/upcoming-followups/', export_upcoming_followup_leads),
     path('reports/export/overdue-followups/', export_overdue_followup_leads),
     path('reports/export/lost-leads/', export_lost_leads),
+    path('reports/export/contacts/', export_contacts),
 
 
     path('mediums/list', get_lead_mediums),

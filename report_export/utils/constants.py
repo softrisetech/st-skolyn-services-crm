@@ -8,6 +8,7 @@ def constants():
                 "upcoming_followup_leads": "upcoming_followup_leads",
                 "overdue_followup_leads": "overdue_followup_leads",
                 "lost_leads": "lost_leads",
+                "contacts": "contacts_export",
             },
         }
     }
