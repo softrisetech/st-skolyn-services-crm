@@ -183,7 +183,7 @@ class Lead(BaseBusinessModel):
     city_id = models.UUIDField(null=True, blank=True, db_index=True)
     first_name = models.CharField(max_length=CHAR_LENGTH, null=True, blank=True)
     last_name = models.CharField(max_length=CHAR_LENGTH, null=True, blank=True)
-    priority = models.PositiveSmallIntegerField(default=1)
+    priority = models.CharField(max_length=PHONE_LENGTH, null=True, blank=True)
     date_of_birth = models.DateField(null=True, blank=True)
     contact_number = models.CharField(max_length=PHONE_LENGTH, null=True, blank=True)
     email = models.EmailField(max_length=EMAIL_LENGTH, null=True, blank=True)
