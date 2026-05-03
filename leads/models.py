@@ -131,6 +131,7 @@ class FollowUpType(BaseBusinessModel):
 
 
 class Team(BaseBusinessModel):
+    branch_id = models.UUIDField(db_index=True, null=True, blank=True)
     user_id = models.UUIDField(db_index=True)
     name = models.CharField(max_length=CHAR_LENGTH)
     description = models.TextField(max_length=LONG_CHAR_LENGTH, blank=True)

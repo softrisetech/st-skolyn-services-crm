@@ -8,7 +8,7 @@ from core.utils.pagination_utils import CustomPagination
 from core.utils.helpers import has_active_child_references
 from core.utils.decorators import access_control_middleware
 from core.utils.date_time_converter import DateTimeConverter
-from ..utils.filters import filter_by_active, filter_by_sort_order
+from ..utils.filters import filter_by_active, filter_by_sort_order, filter_by_branches
 from core.utils.response_utils import success_response, error_response
 
 
@@ -25,6 +25,7 @@ def __apply_filters(queryset, filters):
             Q(description__icontains=search_query) 
         )
 
+    queryset = filter_by_branches(queryset, filters)
     queryset = filter_by_active(queryset, filters)
     queryset = filter_by_sort_order(queryset, filters)
     return queryset

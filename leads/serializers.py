@@ -354,7 +354,7 @@ class TeamSerializer(serializers.ModelSerializer):
     members = serializers.SerializerMethodField()
     class Meta:
         model = Team
-        fields = ('id', 'business_id', 'user_id', 'name', 'description', 'is_active', 'members', 'created_at', 'updated_at')
+        fields = ('id', 'business_id', 'branch_id', 'user_id', 'name', 'description', 'is_active', 'members', 'created_at', 'updated_at')
 
     def validate(self, data):
         errors = {}
