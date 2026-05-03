@@ -406,9 +406,9 @@ def change_stage(request, pk):
 
     # Check if stage requires reason
     stage_reason = None
-    if StageReason.objects.filter(stage_id=stage.id, business_id=business_id).exists():
+    if StageReason.objects.filter(stage_id=stage.id, business_id=business_id, is_active=True).exists():
         reason_id = data.get('reason_id')
-        stage_reason = StageReason.objects.filter(id=reason_id, stage_id=stage.id, business_id=business_id).first()
+        stage_reason = StageReason.objects.filter(id=reason_id, stage_id=stage.id, business_id=business_id, is_active=True).first()
         if not stage_reason:
             return error_response('stage_reason_not_found', status.HTTP_404_NOT_FOUND)
 
