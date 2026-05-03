@@ -78,7 +78,7 @@ class Tag(BaseBusinessModel):
         ]
 
 class StageReason(BaseBusinessModel):
-    stage = models.ForeignKey('Stage', on_delete=models.CASCADE, db_index=True)
+    stage = models.ForeignKey('Stage', on_delete=models.CASCADE, db_index=True, related_name="stage_reasons")
     name = models.CharField(max_length=CHAR_LENGTH, db_index=True)
     slug = AutoSlugField(populate_from='name', unique=True, blank=True, null=True, unique_with=['business_id'], always_update=True)
     description = models.TextField(max_length=LONG_CHAR_LENGTH, blank=True)

@@ -166,9 +166,10 @@ class SourceSerializer(serializers.ModelSerializer):
         return data
 
 class StageSerializer(serializers.ModelSerializer):
+    reason_counts = serializers.SerializerMethodField()
     class Meta:
         model = Stage
-        fields = ['id', 'business_id', 'name', 'slug', 'priority', 'type', 'is_default', 'description', 'is_active', 'created_at', 'updated_at']
+        fields = ['id', 'business_id', 'name', 'slug', 'priority', 'type', 'is_default', 'description', 'is_active', 'reason_counts', 'created_at', 'updated_at']
 
     def validate(self, data):
         errors = {}
@@ -186,6 +187,9 @@ class StageSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(errors)
 
         return data
+    
+    def get_reason_counts(self, obj):
+        return obj.stage_reasons.filter(is_active=True).count()
     
 class StageReasonSerializer(serializers.ModelSerializer):
     stage_name = serializers.CharField(source='stage.name', read_only=True)
