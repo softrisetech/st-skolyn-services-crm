@@ -358,6 +358,15 @@ PERMISSIONS = [
                 "type": 1,
                 "is_active": True,
                 "sort_order": 4,
+            },
+            {
+                "name": "Branch Wise",
+                "url": "",
+                "frontend_url": "",
+                "key": "team-branch-wise",
+                "type": 2,
+                "is_active": True,
+                "sort_order": 5,
             }
         ]
 
@@ -672,6 +681,15 @@ PERMISSIONS = [
                 "type": 1,
                 "is_active": True,
                 "sort_order": 4
+            },
+            {
+                "name": "Branch Wise",
+                "url": "",
+                "frontend_url": "",
+                "key": "session-target-branch-wise",
+                "type": 2,
+                "is_active": True,
+                "sort_order": 5,
             }
         ]
 

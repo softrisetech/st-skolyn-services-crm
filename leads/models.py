@@ -52,7 +52,7 @@ class Stage(BaseBusinessModel):
     type = models.CharField(default="open")
 
     class Meta:
-        ordering = ['-updated_at']
+        ordering = ['priority']
         constraints = [
             models.UniqueConstraint(
                 fields=['slug', 'business_id'],

@@ -10,10 +10,32 @@ from core.utils.decorators import access_control_middleware
 from core.utils.date_time_converter import DateTimeConverter
 from ..utils.filters import filter_by_active, filter_by_sort_order, filter_by_branches
 from core.utils.response_utils import success_response, error_response
+from core.utils.helpers import check_if_user_is_staff
+from access_control.utils.permission_helpers import (
+    view_branch_wise, 
+)
+from access_control.utils.permission_constants import (
+    TEAM_BRANCH_WISE
+)
 
 
-def __queryset(business_id):
-    return Team.objects.filter(business_id=business_id)
+def __queryset(data, business_id):
+    filters = {"business_id": business_id}
+    is_staff = check_if_user_is_staff(data)
+
+    if is_staff in ["true", True]:
+        user_id = data.get('auth_id')
+        role_id = data.get('auth_role_id')
+        have_branch_wise_permission = view_branch_wise(user_id, role_id, TEAM_BRANCH_WISE)
+        queryset = Team.objects.filter(**filters)
+
+        if have_branch_wise_permission:
+            branch_id = data.get("auth_branch_id")
+            queryset = queryset.filter(branch_id=branch_id)
+
+        return queryset
+
+    return Team.objects.filter(**filters)
 
 
 def __apply_filters(queryset, filters):
@@ -37,7 +59,7 @@ def get_lead_teams(request):
     data = request.data
     timezone = data.get("auth_timezone")
     business_id = data.get('auth_business_id')
-    queryset = __queryset(business_id)
+    queryset = __queryset(data, business_id)
     queryset = __apply_filters(queryset, data)
     paginator = CustomPagination()
     paginated_queryset = paginator.paginate_queryset(queryset, request)
@@ -55,7 +77,7 @@ def get_lead_team(request, pk=None):
     data = request.data
     timezone = data.get("auth_timezone")
     business_id = data.get('auth_business_id')
-    team = __queryset(business_id).filter(id=pk).first()
+    team = __queryset(data, business_id).filter(id=pk).first()
     if not team:
         return error_response('team_not_found', status.HTTP_404_NOT_FOUND)
 
@@ -97,7 +119,7 @@ def update_lead_team(request, pk=None):
     data = request.data.copy()
     business_id = data.get('auth_business_id')
 
-    team = __queryset(business_id).filter(id=pk).first()
+    team = __queryset(data, business_id).filter(id=pk).first()
     if not team:
         return error_response('team_not_found', status.HTTP_404_NOT_FOUND)
 
@@ -129,8 +151,9 @@ def update_lead_team(request, pk=None):
 @api_view(['POST'])
 @access_control_middleware
 def delete_lead_team(request, pk=None):
-    business_id = request.data.get('auth_business_id')
-    team = __queryset(business_id).filter(id=pk).first()
+    data = request.data
+    business_id = data.get('auth_business_id')
+    team = __queryset(data, business_id).filter(id=pk).first()
     if not team:
         return error_response('team_not_found', status.HTTP_404_NOT_FOUND)
 
