@@ -351,10 +351,10 @@ class TeamMemberSerializer(serializers.ModelSerializer):
 
 
 class TeamSerializer(serializers.ModelSerializer):
-    members = serializers.SerializerMethodField()
+    member_ids = serializers.SerializerMethodField()
     class Meta:
         model = Team
-        fields = ('id', 'business_id', 'branch_id', 'user_id', 'name', 'description', 'is_active', 'members', 'created_at', 'updated_at')
+        fields = ('id', 'business_id', 'branch_id', 'user_id', 'name', 'description', 'is_active', 'member_ids', 'created_at', 'updated_at')
 
     def validate(self, data):
         errors = {}
@@ -373,7 +373,7 @@ class TeamSerializer(serializers.ModelSerializer):
 
         return data
     
-    def get_members(self, obj):
+    def get_member_ids(self, obj):
         return list(
             obj.members.values_list('user_id', flat=True)
         )
