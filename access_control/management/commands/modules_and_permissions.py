@@ -12,7 +12,7 @@ MODULES = [
     {"name": "Stage Reasons", "is_active": True, "app_slug": "crm"},
     {"name": "Follow Up Types", "is_active": True, "app_slug": "crm"},
     {"name": "Institutes", "is_active": True, "app_slug": "crm"},
-    {"name": "Session Targets", "is_active": True, "app_slug": "crm"},
+    {"name": "Academic Year Targets", "is_active": True, "app_slug": "crm"},
 
 ]
 
@@ -643,7 +643,7 @@ PERMISSIONS = [
 
     },
     {
-        "module_name": "Session Targets",
+        "module_name": "Academic Year Targets",
         "module_app_slug": "crm",
         "permissions": [
             {
@@ -695,7 +695,7 @@ PERMISSIONS = [
 
     },
     {
-        "module_name": "Session Targets",
+        "module_name": "Academic Year Targets",
         "module_app_slug": "crm",
         "permissions": [
             {
