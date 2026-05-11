@@ -3,12 +3,16 @@ from rest_framework import status
 from ..models import Contact, Lead
 from ..serializers import ContactSerializer
 from rest_framework.decorators import api_view
-from ..utils.filters import filter_by_sort_order
 from core.utils.pagination_utils import CustomPagination
 from core.utils.helpers import has_active_child_references
 from core.utils.decorators import access_control_middleware
 from core.utils.date_time_converter import DateTimeConverter
 from core.utils.response_utils import success_response, error_response
+from ..utils.filters import (
+    filter_by_sort_order, 
+    filter_by_is_father_applicable, 
+    filter_by_is_mother_applicable
+)
 
 
 def __queryset(business_id):
@@ -30,6 +34,9 @@ def __apply_filters(queryset, filters):
             Q(mother_contact_number__icontains=search_query) |
             Q(mother_nic__icontains=search_query)  
         )
+
+    queryset = filter_by_is_father_applicable(queryset, filters)
+    queryset = filter_by_is_mother_applicable(queryset, filters)
     queryset = filter_by_sort_order(queryset, filters)
     return queryset
 

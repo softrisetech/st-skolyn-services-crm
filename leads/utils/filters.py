@@ -247,6 +247,20 @@ def filter_by_converted(queryset, filters):
 
     return queryset
 
+def filter_by_is_father_applicable(queryset, filters):
+    is_father_applicable = filters.get('is_father_applicable')
+    if is_father_applicable is not None:
+        queryset = queryset.filter(is_father_applicable=is_father_applicable)
+
+    return queryset
+
+def filter_by_is_mother_applicable(queryset, filters):
+    is_mother_applicable = filters.get('is_mother_applicable')
+    if is_mother_applicable is not None:
+        queryset = queryset.filter(is_mother_applicable=is_mother_applicable)
+
+    return queryset
+
 def filter_by_sessions(queryset, filters):
     session_ids = filters.get('session_ids')
     if session_ids:

@@ -412,7 +412,7 @@ PERMISSIONS = [
                 "sort_order": 4,
             },
             {
-                "name": "Contacts Export",
+                "name": "Export",
                 "url": "reports/export/contacts/",
                 "frontend_url": "/crm/lead-contacts-exports",
                 "key": "",
