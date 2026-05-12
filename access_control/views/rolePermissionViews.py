@@ -1,16 +1,13 @@
-from rest_framework.decorators import api_view
 from rest_framework import status
+from rest_framework.decorators import api_view
+from ..serializers import RolePermissionSerializer
 from ..models import Module, RolePermission, Permission
-from ..serializers import ModuleSerializer, RolePermissionSerializer
 from core.utils.response_utils import success_response, error_response
-from core.utils.pagination_utils import CustomPagination
-import json
 
 @api_view(['POST'])
 def role_permissions(request, pk):
     try:
         data = request.data
-        request.page_size = "all"
         business_id = data.get('auth_business_id')
         app_slug = data.get('app_slug')
 
@@ -55,16 +52,11 @@ def role_permissions(request, pk):
 
             modified_modules.append(modified_module)
 
-        # ✅ Pagination
-        paginator = CustomPagination()
-        paginated_queryset = paginator.paginate_queryset(modified_modules, request)
-
-        response_data = paginator.get_paginated_response(paginated_queryset)
-
-        return success_response("record_fetched", status.HTTP_200_OK, response_data)
+        return success_response("record_fetched", status.HTTP_200_OK, {"items": modified_modules})
 
     except Exception as e:
         return error_response(str(e), status.HTTP_500_INTERNAL_SERVER_ERROR)
+
 
 
 @api_view(['POST'])

@@ -8,12 +8,13 @@ from rest_framework.decorators import api_view
 from access_control.utils.permission_helpers import *
 from core.utils.response_utils import success_response
 from access_control.utils.permission_constants import *
-from ..models import Lead, Source, Medium, Stage, Campaign, StageReasonEntry
+from ..models import Lead, Source, Medium, Stage, Campaign, StageReasonEntry, SessionTarget
 from ..serializers import DashboardCampaignSerializer
 from core.utils.pagination_utils import CustomPagination
 from core.constants.model_constants import WON, LOST
 from dateutil.relativedelta import relativedelta
 from django.db.models.functions import TruncDate
+from django.db.models import Sum
 
 from leads.utils.filters import (
     filter_by_classes, 
@@ -138,63 +139,128 @@ def get_leads_summary(request):
     return success_response("record_fetched", status.HTTP_200_OK, summary)
 
 
+def get_session_target(data, business_id):
+    filters = {"business_id": business_id}
+
+    is_staff = check_if_user_is_staff(data)
+    queryset = SessionTarget.objects.filter(**filters)
+
+    # 🔹 Staff-specific branch restriction
+    if is_staff in ["true", True]:
+        user_id = data.get('auth_id')
+        role_id = data.get('auth_role_id')
+
+        have_branch_wise_permission = view_branch_wise(
+            user_id,
+            role_id,
+            SESSION_TARGET_BRANCH_WISE
+        )
+
+        # If user does NOT have permission → restrict to own branch
+        if not have_branch_wise_permission:
+            branch_id = data.get("auth_branch_id")
+            if branch_id:
+                queryset = queryset.filter(branch_id=branch_id)
+
+    queryset = filter_by_branches(queryset, data)
+    queryset = filter_by_sessions(queryset, data)
+
+    # 🔹 Always return SUM
+    total_target = queryset.aggregate(total=Sum("target"))["total"] or 0
+
+    return total_target
+
 @api_view(['POST'])
 def get_leads_funnel(request):
     data = request.data
-    business_id = data.get('auth_business_id')
+    business_id = data.get("auth_business_id")
 
     queryset = __queryset(data, business_id)
     queryset = __apply_filters(queryset, data)
 
     total_leads = queryset.count()
 
-    # 🔹 Get ALL lost stages
-    # lost_stage_ids = Stage.objects.filter(
-    #     business_id=business_id,
-    #     type=LOST
-    # ).values_list("id", flat=True)
+    # 🔹 total target
+    total_target = get_session_target(data, business_id)
 
-    # Exclude all lost + NULL
+    # 🔹 remove lost/null
+    lost_stage_ids = Stage.objects.filter(
+        business_id=business_id,
+        type=LOST
+    ).values_list("id", flat=True)
+
     queryset = queryset.exclude(
-        # Q(stage__id__in=lost_stage_ids) | Q(stage__isnull=True)
-        Q(stage__isnull=True)
-
+        Q(stage__id__in=lost_stage_ids) | Q(stage__isnull=True)
     )
 
-
-    # Get active stages in order of priority
-    active_stages = list(
-        Stage.objects.filter(is_active=True, business_id=business_id)
-        # .exclude(type=LOST)
+    # 🔹 ordered stages
+    stages = list(
+        Stage.objects.filter(
+            business_id=business_id,
+            is_active=True
+        )
+        .exclude(type=LOST)
         .order_by("priority")
-        .values("name", "type")
+        .values("id", "name", "priority")
     )
 
-    # Get lead counts per stage
-    lead_stages = queryset.values(stage_name=F("stage__name")).annotate(count=Count("id"))
-    lead_stages_dict = {entry["stage_name"]: entry["count"] for entry in lead_stages if entry["stage_name"]}
+    # 🔥 KEY: Build dynamic aggregation
+    aggregation = {}
 
-    # Calculate funnel counts
-    cumulative_count = total_leads
-    stages_with_counts = []
+    for stage in stages:
+        key = f"stage_{stage['id']}"
+        aggregation[key] = Count(
+            "id",
+            filter=Q(stage__priority__gte=stage["priority"])
+        )
 
-    for stage_entry in active_stages:
-        stage_name = stage_entry["name"]
-        stage_count = lead_stages_dict.get(stage_name, 0)
+    # 🔹 single DB hit
+    counts = queryset.aggregate(**aggregation)
 
-        stages_with_counts.append({
+    # 🔹 build response
+    funnel = []
+
+    # ✅ 1. Add TOTAL LEADS at top
+    total_leads_conversion = (
+        (total_leads / total_target) * 100
+        if total_target > 0 else 0
+    )
+
+    funnel.append({
+        "stage_name": "Total Leads",
+        "stage_count": total_leads,
+        "funnel_conversion_percentage": 100.0 if total_leads > 0 else 0,
+        "target_conversion_percentage": round(total_leads_conversion, 2)
+    })
+
+    # ✅ 2. Add stage-wise waterfall
+    for stage in stages:
+        key = f"stage_{stage['id']}"
+        stage_count = counts.get(key, 0)
+        stage_name = stage["name"]
+
+        funnel_conversion = (
+            (stage_count / total_leads) * 100
+            if total_leads > 0 else 0
+        )
+
+        target_conversion = (
+            (stage_count / total_target) * 100
+            if total_target > 0 else 0
+        )
+
+        funnel.append({
             "stage_name": stage_name,
-            "count": cumulative_count
+            "stage_count": stage_count,
+            "funnel_conversion_percentage": round(funnel_conversion, 2),
+            "target_conversion_percentage": round(target_conversion, 2)
         })
 
-        cumulative_count -= stage_count
-
-    funnel_data = {
+    return success_response("record_fetched", status.HTTP_200_OK, {
         "total_leads": total_leads,
-        "stages": stages_with_counts
-    }
-
-    return success_response("record_fetched", status.HTTP_200_OK, funnel_data)
+        "total_target": total_target,
+        "funnel": funnel
+    })
 
 @api_view(['POST'])
 def get_sources_leads(request):

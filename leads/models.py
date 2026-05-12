@@ -52,7 +52,7 @@ class Stage(BaseBusinessModel):
     type = models.CharField(default="open")
 
     class Meta:
-        ordering = ['-updated_at']
+        ordering = ['priority']
         constraints = [
             models.UniqueConstraint(
                 fields=['slug', 'business_id'],
@@ -78,7 +78,7 @@ class Tag(BaseBusinessModel):
         ]
 
 class StageReason(BaseBusinessModel):
-    stage = models.ForeignKey('Stage', on_delete=models.CASCADE, db_index=True)
+    stage = models.ForeignKey('Stage', on_delete=models.CASCADE, db_index=True, related_name="stage_reasons")
     name = models.CharField(max_length=CHAR_LENGTH, db_index=True)
     slug = AutoSlugField(populate_from='name', unique=True, blank=True, null=True, unique_with=['business_id'], always_update=True)
     description = models.TextField(max_length=LONG_CHAR_LENGTH, blank=True)
@@ -131,6 +131,7 @@ class FollowUpType(BaseBusinessModel):
 
 
 class Team(BaseBusinessModel):
+    branch_id = models.UUIDField(db_index=True, null=True, blank=True)
     user_id = models.UUIDField(db_index=True)
     name = models.CharField(max_length=CHAR_LENGTH)
     description = models.TextField(max_length=LONG_CHAR_LENGTH, blank=True)
@@ -183,7 +184,7 @@ class Lead(BaseBusinessModel):
     city_id = models.UUIDField(null=True, blank=True, db_index=True)
     first_name = models.CharField(max_length=CHAR_LENGTH, null=True, blank=True)
     last_name = models.CharField(max_length=CHAR_LENGTH, null=True, blank=True)
-    priority = models.PositiveSmallIntegerField(default=1)
+    priority = models.CharField(max_length=PHONE_LENGTH, null=True, blank=True)
     date_of_birth = models.DateField(null=True, blank=True)
     contact_number = models.CharField(max_length=PHONE_LENGTH, null=True, blank=True)
     email = models.EmailField(max_length=EMAIL_LENGTH, null=True, blank=True)

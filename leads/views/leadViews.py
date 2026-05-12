@@ -406,9 +406,9 @@ def change_stage(request, pk):
 
     # Check if stage requires reason
     stage_reason = None
-    if StageReason.objects.filter(stage_id=stage.id, business_id=business_id).exists():
+    if StageReason.objects.filter(stage_id=stage.id, business_id=business_id, is_active=True).exists():
         reason_id = data.get('reason_id')
-        stage_reason = StageReason.objects.filter(id=reason_id, stage_id=stage.id, business_id=business_id).first()
+        stage_reason = StageReason.objects.filter(id=reason_id, stage_id=stage.id, business_id=business_id, is_active=True).first()
         if not stage_reason:
             return error_response('stage_reason_not_found', status.HTTP_404_NOT_FOUND)
 
@@ -951,6 +951,8 @@ def prepare_leads_to_store(data):
     emails = data.get("emails")
     nics = data.get("nics")
     genders = data.get("genders")
+    ethnicities = data.get("ethnicities")
+
 
     lead_data_list = []
     iternations = len(first_names)
@@ -976,7 +978,7 @@ def prepare_leads_to_store(data):
             "email": emails[index] if index < len(emails) else None,
             "nic": nics[index] if index < len(nics) else None,
             "gender": genders[index] if index < len(genders) else None,
-            "ethnicity": data.get("ethnicity"),
+            "ethnicity": ethnicities[index] if index < len(ethnicities) else None,
             "remarks": data.get("remarks"),
             "created_by": data.get("auth_id"),
             "assigned_to": data.get("assigned_to"),

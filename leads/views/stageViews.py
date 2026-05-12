@@ -177,8 +177,8 @@ def create_default_stages(request):
         # Define default stages
         default_stages = [
             Stage(name="Initial", priority=1, type=OPEN, is_default=True, is_active=True, business_id=business_id),
-            Stage(name="Won", priority=2, type=WON, is_default=False, is_active=True, business_id=business_id),
-            Stage(name="Lost", priority=3, type=LOST, is_default=False, is_active=True, business_id=business_id),
+            Stage(name="Won", priority=9, type=WON, is_default=False, is_active=True, business_id=business_id),
+            Stage(name="Lost", priority=10, type=LOST, is_default=False, is_active=True, business_id=business_id),
         ]
 
         # Bulk insert stages with transaction handling

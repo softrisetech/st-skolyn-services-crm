@@ -12,7 +12,7 @@ MODULES = [
     {"name": "Stage Reasons", "is_active": True, "app_slug": "crm"},
     {"name": "Follow Up Types", "is_active": True, "app_slug": "crm"},
     {"name": "Institutes", "is_active": True, "app_slug": "crm"},
-    {"name": "Session Targets", "is_active": True, "app_slug": "crm"},
+    {"name": "Academic Year Targets", "is_active": True, "app_slug": "crm"},
 
 ]
 
@@ -358,6 +358,15 @@ PERMISSIONS = [
                 "type": 1,
                 "is_active": True,
                 "sort_order": 4,
+            },
+            {
+                "name": "Branch Wise",
+                "url": "",
+                "frontend_url": "",
+                "key": "team-branch-wise",
+                "type": 2,
+                "is_active": True,
+                "sort_order": 5,
             }
         ]
 
@@ -403,7 +412,7 @@ PERMISSIONS = [
                 "sort_order": 4,
             },
             {
-                "name": "Contacts Export",
+                "name": "Export",
                 "url": "reports/export/contacts/",
                 "frontend_url": "/crm/lead-contacts-exports",
                 "key": "",
@@ -634,7 +643,7 @@ PERMISSIONS = [
 
     },
     {
-        "module_name": "Session Targets",
+        "module_name": "Academic Year Targets",
         "module_app_slug": "crm",
         "permissions": [
             {
@@ -672,12 +681,21 @@ PERMISSIONS = [
                 "type": 1,
                 "is_active": True,
                 "sort_order": 4
+            },
+            {
+                "name": "Branch Wise",
+                "url": "",
+                "frontend_url": "",
+                "key": "session-target-branch-wise",
+                "type": 2,
+                "is_active": True,
+                "sort_order": 5,
             }
         ]
 
     },
     {
-        "module_name": "Session Targets",
+        "module_name": "Academic Year Targets",
         "module_app_slug": "crm",
         "permissions": [
             {

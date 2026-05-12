@@ -166,9 +166,10 @@ class SourceSerializer(serializers.ModelSerializer):
         return data
 
 class StageSerializer(serializers.ModelSerializer):
+    reason_counts = serializers.SerializerMethodField()
     class Meta:
         model = Stage
-        fields = ['id', 'business_id', 'name', 'slug', 'priority', 'type', 'is_default', 'description', 'is_active', 'created_at', 'updated_at']
+        fields = ['id', 'business_id', 'name', 'slug', 'priority', 'type', 'is_default', 'description', 'is_active', 'reason_counts', 'created_at', 'updated_at']
 
     def validate(self, data):
         errors = {}
@@ -186,6 +187,9 @@ class StageSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(errors)
 
         return data
+    
+    def get_reason_counts(self, obj):
+        return obj.stage_reasons.filter(is_active=True).count()
     
 class StageReasonSerializer(serializers.ModelSerializer):
     stage_name = serializers.CharField(source='stage.name', read_only=True)
@@ -351,10 +355,10 @@ class TeamMemberSerializer(serializers.ModelSerializer):
 
 
 class TeamSerializer(serializers.ModelSerializer):
-    members = serializers.SerializerMethodField()
+    member_ids = serializers.SerializerMethodField()
     class Meta:
         model = Team
-        fields = ('id', 'business_id', 'user_id', 'name', 'description', 'is_active', 'members', 'created_at', 'updated_at')
+        fields = ('id', 'business_id', 'branch_id', 'user_id', 'name', 'description', 'is_active', 'member_ids', 'created_at', 'updated_at')
 
     def validate(self, data):
         errors = {}
@@ -373,7 +377,7 @@ class TeamSerializer(serializers.ModelSerializer):
 
         return data
     
-    def get_members(self, obj):
+    def get_member_ids(self, obj):
         return list(
             obj.members.values_list('user_id', flat=True)
         )
