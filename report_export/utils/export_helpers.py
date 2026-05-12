@@ -24,5 +24,6 @@ async def export_entry(data):
         created_by=created_by,
         payload=payload,
         link=None,
+        file_name=data.get("file_name"),   
     )
     return entry

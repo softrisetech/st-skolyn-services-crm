@@ -27,6 +27,15 @@ def filter_export_by_type(queryset, filters):
         queryset = queryset.filter(type=type_)
     return queryset
 
+def filter_export_by_file_name(queryset, filters):
+    file_name = filters.get("file_name")
+
+    if file_name:
+        queryset = queryset.filter(
+            Q(file_name__icontains=file_name)
+        )
+
+    return queryset
 
 def filter_export_by_app_slug(queryset, filters):
     app_slug = filters.get("app_slug")

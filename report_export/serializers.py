@@ -18,6 +18,7 @@ class ExportSerializer(serializers.ModelSerializer):
             "created_by",
             "payload",
             "link",
+            "file_name",
             "created_at",
             "updated_at",
             "deleted_at",
