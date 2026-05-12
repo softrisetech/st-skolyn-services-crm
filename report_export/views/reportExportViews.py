@@ -22,6 +22,7 @@ from ..helpers.export_filters import (
     filter_export_by_created_by,
     filter_export_by_date_range,
     filter_by_sort_order,
+    filter_export_by_file_name,
 )   
 logger = logging.getLogger(__name__)
 
@@ -48,6 +49,7 @@ def __apply_export_filters(queryset, filters):
     queryset = filter_export_by_app_slug(queryset, filters)
     queryset = filter_export_by_created_by(queryset, filters)
     queryset = filter_export_by_date_range(queryset, filters)
+    queryset = filter_export_by_file_name(queryset, filters)
     queryset = filter_by_sort_order(queryset, filters)
     return queryset
 
