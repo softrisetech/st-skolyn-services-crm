@@ -965,6 +965,7 @@ def prepare_leads_to_store(data):
             "business_id": data.get("auth_business_id"),
             "branch_id": data.get("branch_id"),
             "session_id": data.get("session_id"),
+            "class_id": data.get("class_id"),
             "medium": data.get("medium"),
             "source": data.get("source"),
             "stage": data.get("stage"),
