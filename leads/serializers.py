@@ -368,10 +368,16 @@ class TrackingSerializer(serializers.ModelSerializer):
         else:
             return ""
         
-    def get_stage_reason_entry(self):
+    def get_stage_reason_entry(self, obj):
         try:
-            stage_reason_entry = StageReasonEntry.objects.get(id=self.model_id)
-            return stage_reason_entry
+            if obj.stage_reason_entry_id:
+                stage_reason_entry = StageReasonEntry.objects.get(id=obj.stage_reason_entry_id)
+
+                return {
+                    "remarks": stage_reason_entry.remarks,
+                }
+            
+            return None
         except StageReasonEntry.DoesNotExist:
             return None
 
