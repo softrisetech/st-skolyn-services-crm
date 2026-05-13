@@ -30,6 +30,20 @@ def lead_follow_up_search_filter(queryset, filters):
 
     return queryset
 
+def filter_by_lead_pre_requisite_search_filter(queryset, filters):
+    search_query = filters.get('search')
+    if search_query:
+        queryset = queryset.filter(
+            Q(board_name__icontains=search_query) |
+            Q(code__icontains=search_query) |
+            Q(program__icontains=search_query) |
+            Q(courses__course_name__icontains=search_query) |
+            Q(institute__name__icontains=search_query)
+        )
+
+    return queryset
+
+
 def filter_by_branches(queryset, filters):
     branch_ids = filters.get('branch_ids')
     if branch_ids:
