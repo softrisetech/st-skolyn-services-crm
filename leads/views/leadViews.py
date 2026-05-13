@@ -416,10 +416,11 @@ def change_stage(request, pk):
 
     try:
         with transaction.atomic():
-
+            
+            stage_reason_entry = None
             # Create stage reason entry if required
             if stage_reason:
-                StageReasonEntry.objects.create(
+                stage_reason_entry = StageReasonEntry.objects.create(
                     lead_id=lead.id,
                     stage_id=stage.id,
                     stage_reason_id=stage_reason.id,
@@ -433,7 +434,7 @@ def change_stage(request, pk):
             lead.save(update_fields=["stage"])
 
             # Tracking
-            store_leads_tracking([lead], auth_id, old_lead_data)
+            store_leads_tracking([lead], auth_id, old_lead_data, stage_reason_entry)
 
 
             template = None
@@ -907,7 +908,7 @@ def store_leads_attachments(business_id, leads, attachments):
     if lead_attachments_object:
         Attachment.objects.bulk_create(lead_attachments_object)
 
-def store_leads_tracking(leads, auth_id, old_lead=None):
+def store_leads_tracking(leads, auth_id, old_lead=None, stage_reason_entry=None):
     lead_tracking_objects = []
 
     # Map lead fields to their tracking model types
@@ -935,7 +936,8 @@ def store_leads_tracking(leads, auth_id, old_lead=None):
                     lead_id=lead.id,
                     model_id=new_value,
                     model_type=model_type,
-                    user_id=auth_id
+                    user_id=auth_id,
+                    stage_reason_entry_id= model_type == "stage" if stage_reason_entry else None
                 ))
 
     # Bulk insert all tracking records

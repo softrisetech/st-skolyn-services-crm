@@ -348,7 +348,7 @@ class TrackingSerializer(serializers.ModelSerializer):
     class Meta:
         model = Tracking
         fields = [
-            'id', 'business_id', 'lead_id', 'model_id', 'model_type', 'name', 'created_at', 'user_id'
+            'id', 'business_id', 'lead_id', 'model_id', 'model_type', 'name', 'created_at', 'user_id', 'stage_reason'
         ]
 
     def get_name(self, obj):

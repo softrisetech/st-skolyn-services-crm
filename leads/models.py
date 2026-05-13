@@ -249,6 +249,8 @@ class Tracking(BaseBusinessModel):
     model_id = models.UUIDField()
     model_type = models.CharField(max_length=CHAR_LENGTH)
     user_id = models.UUIDField(db_index=True)
+    stage_reason = models.ForeignKey('StageReasonEntry', on_delete=models.CASCADE, db_index=True, null=True, blank=True, related_name='trackings')
+
 
     def get_medium(self):
         try:
