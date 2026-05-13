@@ -293,7 +293,7 @@ class Tracking(BaseBusinessModel):
             return campaign
         except Campaign.DoesNotExist:
             return None
-
+    
 
 class FollowUp(BaseBusinessModel):
     lead = models.ForeignKey('Lead', on_delete=models.CASCADE, db_index=True, related_name='follow_ups')
