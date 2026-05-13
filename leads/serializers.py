@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from core.constants.model_constants import STAGE, TEAM, MEDIUM, TAG, SOURCE, CAMPAIGN
-from .models import PreRequisite, PreRequisiteCourse, Institute, Attachment, Lead, FollowUp, Medium, Source, Stage, StageReason, Tag, Campaign, Tracking, FollowUpType, Team, TeamMember, Contact, SessionTarget, QuickEmail
+from .models import StageReasonEntry, PreRequisite, PreRequisiteCourse, Institute, Attachment, Lead, FollowUp, Medium, Source, Stage, StageReason, Tag, Campaign, Tracking, FollowUpType, Team, TeamMember, Contact, SessionTarget, QuickEmail
 
 NAME_ALREADY_EXISTS = "The name already exists"
 
@@ -344,6 +344,7 @@ class DashboardCampaignSerializer(serializers.ModelSerializer):
 class TrackingSerializer(serializers.ModelSerializer):
     created_at = serializers.DateTimeField(format='%Y-%m-%d %H:%M:%S', read_only=True)
     name = serializers.SerializerMethodField()
+    stage_reason_entry = serializers.SerializerMethodField()
 
     class Meta:
         model = Tracking
@@ -366,6 +367,14 @@ class TrackingSerializer(serializers.ModelSerializer):
             return obj.get_campaign().name
         else:
             return ""
+        
+    def get_stage_reason_entry(self):
+        try:
+            stage_reason_entry = StageReasonEntry.objects.get(id=self.model_id)
+            return stage_reason_entry
+        except StageReasonEntry.DoesNotExist:
+            return None
+
 
 
 class LeadImportSerializer(serializers.ModelSerializer):
