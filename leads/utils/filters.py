@@ -21,6 +21,15 @@ def lead_search_filter(queryset, filters):
 
     return queryset
 
+def lead_follow_up_search_filter(queryset, filters):
+    search_query = filters.get('search')
+    if search_query:
+        queryset = queryset.filter(
+            Q(follow_up_type__name__icontains=search_query)
+        )
+
+    return queryset
+
 def filter_by_branches(queryset, filters):
     branch_ids = filters.get('branch_ids')
     if branch_ids:

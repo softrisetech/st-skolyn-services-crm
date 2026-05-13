@@ -7,14 +7,21 @@ from core.utils.decorators import access_control_middleware
 from core.utils.date_time_converter import DateTimeConverter
 from core.utils.response_utils import success_response, error_response
 from core.utils.notification_utils import notification, notification_obj
-from ..utils.filters import filter_by_created_bys, filter_by_start_and_end_date, filter_by_follow_up_types, filter_by_done
 from ..utils.lead_utils import handle_lead_email_notifications
+from ..utils.filters import (
+    filter_by_created_bys, 
+    filter_by_start_and_end_date, 
+    filter_by_follow_up_types, 
+    filter_by_done,
+    lead_follow_up_search_filter
+)
 
 def __queryset(business_id, lead_id, use_report_db=False):
     db_alias = 'report_connection' if use_report_db else 'default'
     return FollowUp.objects.using(db_alias).filter(business_id=business_id, lead_id=lead_id)
 
 def __apply_filters(queryset, filters):
+    queryset = lead_follow_up_search_filter(queryset, filters)
     queryset = filter_by_created_bys(queryset, filters)
     queryset = filter_by_start_and_end_date(queryset, filters)
     queryset = filter_by_follow_up_types(queryset, filters)
