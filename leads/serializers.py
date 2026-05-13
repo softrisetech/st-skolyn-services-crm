@@ -9,31 +9,82 @@ class ContactSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contact
         fields = [
-            "id", "business_id", "father_first_name", "father_last_name", "father_contact_number", "father_email", "father_nic", "is_father_applicable",
-            "mother_first_name", "mother_last_name", "mother_contact_number", "mother_email", "mother_nic", "is_mother_applicable", "created_at", "updated_at"
+            "id", "business_id",
+            "father_first_name", "father_last_name",
+            "father_contact_number", "father_email",
+            "father_nic", "is_father_applicable",
+
+            "mother_first_name", "mother_last_name",
+            "mother_contact_number", "mother_email",
+            "mother_nic", "is_mother_applicable",
+
+            "created_at", "updated_at"
         ]
 
     def validate(self, data):
         errors = {}
 
-        business_id = data.get('business_id') or (self.instance.business_id if self.instance else None)
+        business_id = (
+            data.get("business_id")
+            or (self.instance.business_id if self.instance else None)
+        )
 
-        father_nic = data.get('father_nic')
-        mother_nic = data.get('mother_nic')
+        father_nic = data.get("father_nic")
+        mother_nic = data.get("mother_nic")
+
+        father_email = data.get("father_email")
+        mother_email = data.get("mother_email")
 
         queryset = Contact.objects.filter(business_id=business_id)
 
         if self.instance:
             queryset = queryset.exclude(id=self.instance.id)
 
-        if father_nic and queryset.filter(father_nic=father_nic).exists():
-            errors["father_nic"] = "This father NIC already exists."
+        # -------------------------
+        # NIC uniqueness validation
+        # -------------------------
 
-        if mother_nic and queryset.filter(mother_nic=mother_nic).exists():
-            errors["mother_nic"] = "This mother NIC already exists."
+        if father_nic:
+            if queryset.filter(father_nic=father_nic).exists():
+                errors["father_nic"] = ["This father NIC already exists."]
 
+            if queryset.filter(mother_nic=father_nic).exists():
+                errors["father_nic"] = ["This NIC is already used as mother NIC."]
+
+        if mother_nic:
+            if queryset.filter(mother_nic=mother_nic).exists():
+                errors["mother_nic"] = ["This mother NIC already exists."]
+
+            if queryset.filter(father_nic=mother_nic).exists():
+                errors["mother_nic"] = ["This NIC is already used as father NIC."]
+
+        # Prevent same NIC in same record
         if father_nic and mother_nic and father_nic == mother_nic:
             errors["father_nic"] = ["Father NIC and Mother NIC cannot be the same."]
+            errors["mother_nic"] = ["Father NIC and Mother NIC cannot be the same."]
+
+        # -------------------------
+        # Email uniqueness validation
+        # -------------------------
+
+        if father_email:
+            if queryset.filter(father_email=father_email).exists():
+                errors["father_email"] = ["This father email already exists."]
+
+            if queryset.filter(mother_email=father_email).exists():
+                errors["father_email"] = ["This email is already used as mother email."]
+
+        if mother_email:
+            if queryset.filter(mother_email=mother_email).exists():
+                errors["mother_email"] = ["This mother email already exists."]
+
+            if queryset.filter(father_email=mother_email).exists():
+                errors["mother_email"] = ["This email is already used as father email."]
+
+        # Prevent same email in same record
+        if father_email and mother_email and father_email == mother_email:
+            errors["father_email"] = ["Father email and Mother email cannot be the same."]
+            errors["mother_email"] = ["Father email and Mother email cannot be the same."]
 
         if errors:
             raise serializers.ValidationError(errors)
