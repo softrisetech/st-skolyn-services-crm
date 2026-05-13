@@ -1,15 +1,14 @@
-from ..models import Tracking
+from ..models import Tracking, Lead
 from rest_framework import status
 from ..serializers import TrackingSerializer
 from rest_framework.decorators import api_view
 from core.utils.pagination_utils import CustomPagination
 from core.utils.decorators import access_control_middleware
 from core.utils.date_time_converter import DateTimeConverter
-from ..utils.filters import filter_by_type, filter_by_model_type
 from core.utils.response_utils import success_response, error_response
 
-def __queryset(business_id):
-    return Tracking.objects.filter(business_id=business_id)
+def __queryset(business_id, lead_id):
+    return Tracking.objects.filter(business_id=business_id, lead_id=lead_id)
 
 
 def __apply_filters(queryset, filters):
@@ -22,11 +21,16 @@ def __apply_filters(queryset, filters):
 
 @api_view(['POST'])
 @access_control_middleware
-def get_lead_trackings(request):
+def get_lead_trackings(request, lead_id):
     data = request.data
     timezone = data.get("auth_timezone")
     business_id = data.get('auth_business_id')
-    queryset = __queryset(business_id)
+
+    lead = Lead.objects.filter(id=lead_id, business_id=business_id).first()
+    if not lead:
+        return error_response('lead_not_found', status.HTTP_404_NOT_FOUND)
+    
+    queryset = __queryset(business_id, lead_id)
     queryset = __apply_filters(queryset, data)
     paginator = CustomPagination()
     paginated_queryset = paginator.paginate_queryset(queryset, request)

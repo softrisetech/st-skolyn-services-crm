@@ -32,6 +32,29 @@ def lead_search_filter(queryset, filters):
 
     return queryset
 
+def lead_follow_up_search_filter(queryset, filters):
+    search_query = filters.get('search')
+    if search_query:
+        queryset = queryset.filter(
+            Q(follow_up_type__name__icontains=search_query)
+        )
+
+    return queryset
+
+def filter_by_lead_pre_requisite_search_filter(queryset, filters):
+    search_query = filters.get('search')
+    if search_query:
+        queryset = queryset.filter(
+            Q(board_name__icontains=search_query) |
+            Q(code__icontains=search_query) |
+            Q(program__icontains=search_query) |
+            Q(courses__course_name__icontains=search_query) |
+            Q(institute__name__icontains=search_query)
+        )
+
+    return queryset
+
+
 def filter_by_branches(queryset, filters):
     branch_ids = filters.get('branch_ids')
     if branch_ids:
@@ -397,36 +420,34 @@ def filter_by_model_type(queryset, filters):
 
 
 def filter_by_sort_order(queryset, filters):
-    sort_by = filters.get('sort_by')  # Default sort field
-    sort_order = filters.get('sort_order')
+    sort_by = filters.get('sort_by')
+    sort_order = filters.get('sort_order', 'asc')
+
+    full_name_mappings = {
+        "full_name": ("first_name", "last_name"),
+        "father_full_name": ("father_first_name", "father_last_name"),
+        "mother_full_name": ("mother_first_name", "mother_last_name"),
+    }
+
+    # Handle virtual full name fields
+    if sort_by in full_name_mappings:
+        first_field, last_field = full_name_mappings[sort_by]
+
+        queryset = queryset.annotate(
+            **{
+                sort_by: Concat(
+                    Coalesce(first_field, Value("")),
+                    Value(" "),
+                    Coalesce(last_field, Value(""))
+                )
+            }
+        )
+
+    # Apply descending order
+    if sort_order == "desc":
+        sort_by = f"-{sort_by}"
 
     if sort_by:
-        if sort_by == "full_name":
-            queryset = queryset.annotate(
-                name=Concat(
-                    Coalesce('first_name', Value('')),
-                    Value(' '),
-                    Coalesce('last_name', Value(''))
-                )
-            )
-        elif sort_by == "father_full_name":
-            queryset = queryset.annotate(
-                name=Concat(
-                    Coalesce('father_first_name', Value('')),
-                    Value(' '),
-                    Coalesce('father_last_name', Value(''))
-                )
-            )
-        elif sort_by == "mother_full_name":
-            queryset = queryset.annotate(
-                name=Concat(
-                    Coalesce('mother_first_name', Value('')),
-                    Value(' '),
-                    Coalesce('mother_last_name', Value(''))
-                )
-            )
-        if sort_order == 'desc':
-            sort_by = f'-{sort_by}'
         queryset = queryset.order_by(sort_by)
 
     return queryset

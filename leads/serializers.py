@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from core.constants.model_constants import STAGE, TEAM, MEDIUM, TAG, SOURCE, CAMPAIGN
-from .models import PreRequisite, PreRequisiteCourse, Institute, Attachment, Lead, FollowUp, Medium, Source, Stage, StageReason, Tag, Campaign, Tracking, FollowUpType, Team, TeamMember, Contact, SessionTarget, QuickEmail
+from .models import StageReasonEntry, PreRequisite, PreRequisiteCourse, Institute, Attachment, Lead, FollowUp, Medium, Source, Stage, StageReason, Tag, Campaign, Tracking, FollowUpType, Team, TeamMember, Contact, SessionTarget, QuickEmail
 
 NAME_ALREADY_EXISTS = "The name already exists"
 
@@ -9,31 +9,82 @@ class ContactSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contact
         fields = [
-            "id", "business_id", "father_first_name", "father_last_name", "father_contact_number", "father_email", "father_nic", "is_father_applicable",
-            "mother_first_name", "mother_last_name", "mother_contact_number", "mother_email", "mother_nic", "is_mother_applicable", "created_at", "updated_at"
+            "id", "business_id",
+            "father_first_name", "father_last_name",
+            "father_contact_number", "father_email",
+            "father_nic", "is_father_applicable",
+
+            "mother_first_name", "mother_last_name",
+            "mother_contact_number", "mother_email",
+            "mother_nic", "is_mother_applicable",
+
+            "created_at", "updated_at"
         ]
 
     def validate(self, data):
         errors = {}
 
-        business_id = data.get('business_id') or (self.instance.business_id if self.instance else None)
+        business_id = (
+            data.get("business_id")
+            or (self.instance.business_id if self.instance else None)
+        )
 
-        father_nic = data.get('father_nic')
-        mother_nic = data.get('mother_nic')
+        father_nic = data.get("father_nic")
+        mother_nic = data.get("mother_nic")
+
+        father_email = data.get("father_email")
+        mother_email = data.get("mother_email")
 
         queryset = Contact.objects.filter(business_id=business_id)
 
         if self.instance:
             queryset = queryset.exclude(id=self.instance.id)
 
-        if father_nic and queryset.filter(father_nic=father_nic).exists():
-            errors["father_nic"] = "This father NIC already exists."
+        # -------------------------
+        # NIC uniqueness validation
+        # -------------------------
 
-        if mother_nic and queryset.filter(mother_nic=mother_nic).exists():
-            errors["mother_nic"] = "This mother NIC already exists."
+        if father_nic:
+            if queryset.filter(father_nic=father_nic).exists():
+                errors["father_nic"] = ["This father NIC already exists."]
 
+            if queryset.filter(mother_nic=father_nic).exists():
+                errors["father_nic"] = ["This NIC is already used as mother NIC."]
+
+        if mother_nic:
+            if queryset.filter(mother_nic=mother_nic).exists():
+                errors["mother_nic"] = ["This mother NIC already exists."]
+
+            if queryset.filter(father_nic=mother_nic).exists():
+                errors["mother_nic"] = ["This NIC is already used as father NIC."]
+
+        # Prevent same NIC in same record
         if father_nic and mother_nic and father_nic == mother_nic:
             errors["father_nic"] = ["Father NIC and Mother NIC cannot be the same."]
+            errors["mother_nic"] = ["Father NIC and Mother NIC cannot be the same."]
+
+        # -------------------------
+        # Email uniqueness validation
+        # -------------------------
+
+        if father_email:
+            if queryset.filter(father_email=father_email).exists():
+                errors["father_email"] = ["This father email already exists."]
+
+            if queryset.filter(mother_email=father_email).exists():
+                errors["father_email"] = ["This email is already used as mother email."]
+
+        if mother_email:
+            if queryset.filter(mother_email=mother_email).exists():
+                errors["mother_email"] = ["This mother email already exists."]
+
+            if queryset.filter(father_email=mother_email).exists():
+                errors["mother_email"] = ["This email is already used as father email."]
+
+        # Prevent same email in same record
+        if father_email and mother_email and father_email == mother_email:
+            errors["father_email"] = ["Father email and Mother email cannot be the same."]
+            errors["mother_email"] = ["Father email and Mother email cannot be the same."]
 
         if errors:
             raise serializers.ValidationError(errors)
@@ -293,11 +344,12 @@ class DashboardCampaignSerializer(serializers.ModelSerializer):
 class TrackingSerializer(serializers.ModelSerializer):
     created_at = serializers.DateTimeField(format='%Y-%m-%d %H:%M:%S', read_only=True)
     name = serializers.SerializerMethodField()
+    stage_reason_entry = serializers.SerializerMethodField()
 
     class Meta:
         model = Tracking
         fields = [
-            'id', 'business_id', 'lead_id', 'model_id', 'model_type', 'name', 'created_at', 'user_id'
+            'id', 'business_id', 'lead_id', 'model_id', 'model_type', 'name', 'created_at', 'user_id', 'stage_reason_entry'
         ]
 
     def get_name(self, obj):
@@ -315,6 +367,22 @@ class TrackingSerializer(serializers.ModelSerializer):
             return obj.get_campaign().name
         else:
             return ""
+        
+    def get_stage_reason_entry(self, obj):
+        try:
+            if obj.stage_reason_entry_id:
+                stage_reason_entry = StageReasonEntry.objects.get(id=obj.stage_reason_entry_id)
+
+                return {
+                    "stage_reason_name": stage_reason_entry.stage_reason.name,
+                    "stage_reason_description": stage_reason_entry.stage_reason.description,
+                    "remarks": stage_reason_entry.remarks,
+                }
+            
+            return None
+        except StageReasonEntry.DoesNotExist:
+            return None
+
 
 
 class LeadImportSerializer(serializers.ModelSerializer):

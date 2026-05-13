@@ -248,6 +248,6 @@ urlpatterns = [
     path('contacts/<uuid:pk>/update', update_lead_contact),
     path('contacts/<uuid:pk>/delete', delete_lead_contact),
 
-    path('lead/trackings/list', get_lead_trackings),
+    path('lead/<uuid:lead_id>/trackings/list', get_lead_trackings),
 
 ]

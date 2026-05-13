@@ -235,9 +235,10 @@ class Lead(BaseBusinessModel):
 
         processed_files = []
         for att in attachments:
-            file_obj = att.file  # access the file JSONField or dict
-            if file_obj:
-                processed_files.append(file_obj)
+            processed_files.append({
+                "id": att.id,
+                "file": att.file 
+            })
 
         return processed_files
     
@@ -248,6 +249,8 @@ class Tracking(BaseBusinessModel):
     model_id = models.UUIDField()
     model_type = models.CharField(max_length=CHAR_LENGTH)
     user_id = models.UUIDField(db_index=True)
+    stage_reason_entry = models.ForeignKey('StageReasonEntry', on_delete=models.CASCADE, db_index=True, null=True, blank=True, related_name='trackings')
+
 
     def get_medium(self):
         try:
@@ -290,7 +293,7 @@ class Tracking(BaseBusinessModel):
             return campaign
         except Campaign.DoesNotExist:
             return None
-
+    
 
 class FollowUp(BaseBusinessModel):
     lead = models.ForeignKey('Lead', on_delete=models.CASCADE, db_index=True, related_name='follow_ups')

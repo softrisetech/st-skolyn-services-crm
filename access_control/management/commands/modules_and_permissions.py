@@ -447,7 +447,7 @@ PERMISSIONS = [
             },
             {
                 "name": "Edit",
-                "url": "leads/{id}/update, leads/{id}/change/stage",
+                "url": "leads/{id}/update, leads/{id}/change/stage, leads/quick/email",
                 "frontend_url": "/crm/leads/[:id]/edit",
                 "key": "",
                 "type": 1,
@@ -464,7 +464,7 @@ PERMISSIONS = [
                 "sort_order": 4,
             },
             {
-                "name": "Leads Export",
+                "name": "Export",
                 "url": "leads/export/",
                 "frontend_url": "/crm/leads/export",
                 "key": "",
