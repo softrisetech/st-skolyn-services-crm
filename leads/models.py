@@ -235,9 +235,10 @@ class Lead(BaseBusinessModel):
 
         processed_files = []
         for att in attachments:
-            file_obj = att.file  # access the file JSONField or dict
-            if file_obj:
-                processed_files.append(file_obj)
+            processed_files.append({
+                "id": att.id,
+                "file": att.file 
+            })
 
         return processed_files
     
