@@ -937,7 +937,7 @@ def store_leads_tracking(leads, auth_id, old_lead=None, stage_reason_entry=None)
                     model_id=new_value,
                     model_type=model_type,
                     user_id=auth_id,
-                    stage_reason_entry_id= model_type == "stage" if stage_reason_entry else None
+                    stage_reason_entry_id=stage_reason_entry.id if model_type == "stage" and stage_reason_entry else None
                 ))
 
     # Bulk insert all tracking records
