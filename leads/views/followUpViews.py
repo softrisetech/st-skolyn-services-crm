@@ -34,6 +34,11 @@ def get_lead_follow_ups(request, lead_id):
     data = request.data
     timezone = data.get("auth_timezone")
     business_id = data.get('auth_business_id')
+
+    lead = Lead.objects.filter(id=lead_id, business_id=business_id).first()
+    if not lead:
+        return error_response('lead_not_found', status.HTTP_404_NOT_FOUND)
+    
     queryset = __queryset(business_id, lead_id)
     queryset = __apply_filters(queryset, data)
     paginator = CustomPagination()
