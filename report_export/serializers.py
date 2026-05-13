@@ -19,6 +19,7 @@ class ExportSerializer(serializers.ModelSerializer):
             "payload",
             "link",
             "file_name",
+            "format_type",
             "created_at",
             "updated_at",
             "deleted_at",

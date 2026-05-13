@@ -10,6 +10,7 @@ def export_search_filter(queryset, filters):
             Q(app_slug__icontains=search)
             | Q(type__icontains=search)
             | Q(status__icontains=search)
+            | Q(file_name__icontains=search)
         )
     return queryset
 
