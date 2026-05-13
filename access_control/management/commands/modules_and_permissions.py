@@ -448,7 +448,7 @@ PERMISSIONS = [
             {
                 "name": "Edit",
                 "url": "leads/{id}/update, leads/{id}/change/stage, leads/quick/email",
-                "frontend_url": "/crm/leads/[:id]/edit",
+                "frontend_url": "/crm/leads/[:id]/edit, /crm/leads/[:id]/follow-ups, /crm/leads/[:id]/trackings, /crm/leads/[:id]/pre-requisites",
                 "key": "",
                 "type": 1,
                 "is_active": True,
