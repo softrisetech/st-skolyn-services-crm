@@ -374,7 +374,8 @@ class TrackingSerializer(serializers.ModelSerializer):
                 stage_reason_entry = StageReasonEntry.objects.get(id=obj.stage_reason_entry_id)
 
                 return {
-                    "reason": stage_reason_entry.stage_reason.name,
+                    "stage_reason_name": stage_reason_entry.stage_reason.name,
+                    "stage_reason_description": stage_reason_entry.stage_reason.description,
                     "remarks": stage_reason_entry.remarks,
                 }
             
