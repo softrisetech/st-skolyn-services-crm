@@ -2,7 +2,7 @@ MODULES = [
     {"name": "Contacts", "is_active": True, "app_slug": "crm"},
     {"name": "Leads", "is_active": True, "app_slug": "crm"},
     {"name": "Reports", "is_active": True, "app_slug": "crm"},
-    {"name": "Report Exports", "is_active": True, "app_slug": "crm"},
+    {"name": "CRM Exports", "is_active": True, "app_slug": "crm"},
     {"name": "Teams", "is_active": True, "app_slug": "crm"},
     {"name": "Mediums", "is_active": True, "app_slug": "crm"},
     {"name": "Sources", "is_active": True, "app_slug": "crm"},
@@ -738,7 +738,7 @@ PERMISSIONS = [
 
     },
     {
-        "module_name": "Report Exports",
+        "module_name": "CRM Exports",
         "module_app_slug": "crm",
         "permissions": [
             {
