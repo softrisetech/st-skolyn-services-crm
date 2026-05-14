@@ -13,7 +13,8 @@ from ..utils.filters import (
     filter_by_start_and_end_date, 
     filter_by_follow_up_types, 
     filter_by_done,
-    lead_follow_up_search_filter
+    lead_follow_up_search_filter,
+    filter_by_sort_order
 )
 
 def __queryset(business_id, lead_id, use_report_db=False):
@@ -26,6 +27,7 @@ def __apply_filters(queryset, filters):
     queryset = filter_by_start_and_end_date(queryset, filters)
     queryset = filter_by_follow_up_types(queryset, filters)
     queryset = filter_by_done(queryset, filters)
+    queryset = filter_by_sort_order(queryset, filters)
     return queryset
 
 @api_view(['POST'])
@@ -90,6 +92,7 @@ def store_lead_follow_up(request, lead_id):
         return error_response('lead_not_found', status.HTTP_404_NOT_FOUND)
 
     data['lead'] = lead.id
+    data["date_time"] = DateTimeConverter.to_utc_datetime(data["date_time"], user_timezone)
     serializer = FollowUpSerializer(data=data)
     if not serializer.is_valid():
         return error_response('record_store_failed', status.HTTP_422_UNPROCESSABLE_ENTITY, serializer.errors)
@@ -105,6 +108,7 @@ def store_lead_follow_up(request, lead_id):
 def update_lead_follow_up(request, lead_id, pk):
     data = request.data.copy()
     business_id = request.data.get('auth_business_id')
+    user_timezone = data.get("auth_timezone")
     data['business_id'] = business_id
     data['follow_up_type'] = request.data.get('follow_up_type')
 
@@ -118,6 +122,7 @@ def update_lead_follow_up(request, lead_id, pk):
 
     data['lead'] = follow_up.lead_id
     data['created_by'] = follow_up.created_by
+    data["date_time"] = DateTimeConverter.to_utc_datetime(data["date_time"], user_timezone)
     serializer = FollowUpSerializer(instance=follow_up, data=data, partial=False)
     if not serializer.is_valid():
         return error_response('record_update_failed', status.HTTP_422_UNPROCESSABLE_ENTITY, serializer.errors)
