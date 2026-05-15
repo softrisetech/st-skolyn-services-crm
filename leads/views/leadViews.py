@@ -252,8 +252,12 @@ def store_lead(request):
         store_leads_attachments(business_id, leads, attachments)
         store_leads_tracking(leads, auth_id)
 
+        single_lead = leads[0] if leads else None
+        if single_lead:
+            email_notifications = handle_lead_email_notifications(data, user_timezone, ["parent_email", "team_lead"], email_notifications, "lead_created", single_lead)
+
+
         for lead in leads:
-            email_notifications = handle_lead_email_notifications(data, user_timezone, ["parent_email", "team_lead"], email_notifications, "lead_created", lead)
             email_notifications = handle_lead_email_notifications(data, user_timezone, ["assigned_to"], email_notifications, "lead_assigned", lead)
             web_notifications = handle_lead_web_notifications(data, user_timezone, ["team_lead"], web_notifications, "lead_created", lead)
             web_notifications = handle_lead_web_notifications(data, user_timezone, ["assigned_to"], web_notifications, "lead_assigned", lead)
