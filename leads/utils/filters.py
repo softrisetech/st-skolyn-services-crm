@@ -331,10 +331,19 @@ def filter_by_type(queryset, filters):
 
     return queryset
 
-def filter_by_priority(queryset, filters):
-    priority = filters.get('priority')
-    if priority:
-        queryset = queryset.filter(priority=priority)
+
+def filter_by_priorities(queryset, filters):
+    priorities = filters.get('priorities')
+    if priorities:
+        # Ensure priorities is a list; if it's a single string, convert it into a list
+        if isinstance(priorities, str):
+            priorities = priorities.split(',')  # Convert to a list after stripping spaces
+        elif isinstance(priorities, list):
+            priorities = [b.strip() for b in priorities if b.strip()]  # Remove empty values
+
+        # Apply filter if the list is not empty
+        if priorities:
+            queryset = queryset.filter(priority__in=priorities)
 
     return queryset
 

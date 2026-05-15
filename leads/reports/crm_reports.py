@@ -10,7 +10,7 @@ from leads.serializers import LeadListSerializer
 from django.db.models import Subquery, OuterRef, Q
 from ..views.leadViews import __queryset
 from leads.utils.filters import (
-    filter_by_sort_order,filter_by_campaigns,filter_by_teams,filter_by_priority,filter_by_countries,
+    filter_by_sort_order,filter_by_campaigns,filter_by_teams,filter_by_priorities,filter_by_countries,
     filter_by_states,filter_by_cities,lead_search_filter,filter_by_date_range,filter_by_branches,filter_by_created_by,
     filter_by_assigned_to,filter_by_mediums,filter_by_sessions,filter_by_sources,filter_by_stages,filter_by_tags,
 )
@@ -28,7 +28,7 @@ def __apply_filters(queryset, filters):
     queryset = filter_by_countries(queryset, filters)
     queryset = filter_by_states(queryset, filters)
     queryset = filter_by_cities(queryset, filters)
-    queryset = filter_by_priority(queryset, filters)
+    queryset = filter_by_priorities(queryset, filters)
     queryset = filter_by_mediums(queryset, filters)
     queryset = filter_by_sources(queryset, filters)
     queryset = filter_by_stages(queryset, filters)
