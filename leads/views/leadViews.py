@@ -46,7 +46,8 @@ from core.constants.model_constants import (
     ASSIGNED_TO, 
     TEAM, 
     CAMPAIGN, 
-    LOST
+    LOST,
+    WON
 )
 from ..serializers import (
     LeadListSerializer, 
@@ -362,6 +363,11 @@ def delete_lead(request, pk):
     lead = queryset.filter(id=pk).first()
     if not lead:
         return error_response('lead_not_found', status.HTTP_404_NOT_FOUND)
+    
+    won_stages = Stage.objects.filter(business_id=business_id, type=WON).values_list('id', flat=True)
+    if lead.stage_id in won_stages:
+        return error_response("you_cannot_delete_won_lead", status.HTTP_400_BAD_REQUEST)
+
 
     if is_staff in ["true", True]:
         have_modify_all_permission = view_modify_all(auth_id, role_id, LEAD_MODIFY_ALL)
@@ -373,7 +379,7 @@ def delete_lead(request, pk):
     ]
     has_refs = has_active_child_references(child_references, pk, business_id)
     if has_refs:
-        return error_response("related_tag_record_found_on_deletion", status.HTTP_400_BAD_REQUEST)
+        return error_response("related_lead_record_found_on_deletion", status.HTTP_400_BAD_REQUEST)
 
     lead.attachments.all().update(deleted_at=timezone.now())
     lead.trackings.all().update(deleted_at=timezone.now())
