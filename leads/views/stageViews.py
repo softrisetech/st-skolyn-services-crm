@@ -10,7 +10,7 @@ from core.utils.decorators import access_control_middleware
 from core.utils.date_time_converter import DateTimeConverter
 from django.db import IntegrityError, DatabaseError, transaction
 from core.utils.response_utils import success_response, error_response
-from ..utils.filters import filter_by_active, filter_by_default, filter_by_type, filter_by_priority, filter_by_sort_order
+from ..utils.filters import filter_by_active, filter_by_default, filter_by_type, filter_by_priorities, filter_by_sort_order
 
 
 def __queryset(business_id):
@@ -27,7 +27,7 @@ def __apply_filters(queryset, filters):
         )
 
     queryset = filter_by_type(queryset, filters)
-    queryset = filter_by_priority(queryset, filters)
+    queryset = filter_by_priorities(queryset, filters)
     queryset = filter_by_default(queryset, filters)
     queryset = filter_by_active(queryset, filters)
     queryset = filter_by_sort_order(queryset, filters)

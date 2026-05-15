@@ -46,7 +46,8 @@ from core.constants.model_constants import (
     ASSIGNED_TO, 
     TEAM, 
     CAMPAIGN, 
-    LOST
+    LOST,
+    WON
 )
 from ..serializers import (
     LeadListSerializer, 
@@ -86,7 +87,7 @@ from leads.utils.filters import (
     filter_by_sort_order, 
     filter_by_campaigns, 
     filter_by_teams, 
-    filter_by_priority, 
+    filter_by_priorities, 
     filter_by_countries, 
     filter_by_states, 
     filter_by_cities, 
@@ -147,7 +148,7 @@ def __apply_filters(queryset, filters):
     queryset = filter_by_countries(queryset, filters)
     queryset = filter_by_states(queryset, filters)
     queryset = filter_by_cities(queryset, filters)
-    queryset = filter_by_priority(queryset, filters)
+    queryset = filter_by_priorities(queryset, filters)
     queryset = filter_by_mediums(queryset, filters)
     queryset = filter_by_sources(queryset, filters)
     queryset = filter_by_stages(queryset, filters)
@@ -255,8 +256,12 @@ def store_lead(request):
         store_leads_attachments(business_id, leads, attachments)
         store_leads_tracking(leads, auth_id)
 
+        single_lead = leads[0] if leads else None
+        if single_lead:
+            email_notifications = handle_lead_email_notifications(data, user_timezone, ["parent_email", "team_lead"], email_notifications, "lead_created", single_lead)
+
+
         for lead in leads:
-            email_notifications = handle_lead_email_notifications(data, user_timezone, ["parent_email", "team_lead"], email_notifications, "lead_created", lead)
             email_notifications = handle_lead_email_notifications(data, user_timezone, ["assigned_to"], email_notifications, "lead_assigned", lead)
             web_notifications = handle_lead_web_notifications(data, user_timezone, ["team_lead"], web_notifications, "lead_created", lead)
             web_notifications = handle_lead_web_notifications(data, user_timezone, ["assigned_to"], web_notifications, "lead_assigned", lead)
@@ -273,6 +278,10 @@ def get_lead(request, pk):
     userTimezone = data.get("auth_timezone")
     queryset = __queryset(data, business_id)
     lead = queryset.filter(id=pk).first()
+
+    if not lead:
+        return error_response('lead_not_found', status.HTTP_404_NOT_FOUND)
+    
     serialized_data = LeadGetSerializer(lead).data
 
     if serialized_data["imported_at"]:
@@ -357,6 +366,11 @@ def delete_lead(request, pk):
     lead = queryset.filter(id=pk).first()
     if not lead:
         return error_response('lead_not_found', status.HTTP_404_NOT_FOUND)
+    
+    won_stages = Stage.objects.filter(business_id=business_id, type=WON).values_list('id', flat=True)
+    if lead.stage_id in won_stages:
+        return error_response("you_cannot_delete_won_lead", status.HTTP_400_BAD_REQUEST)
+
 
     if is_staff in ["true", True]:
         have_modify_all_permission = view_modify_all(auth_id, role_id, LEAD_MODIFY_ALL)
@@ -368,7 +382,7 @@ def delete_lead(request, pk):
     ]
     has_refs = has_active_child_references(child_references, pk, business_id)
     if has_refs:
-        return error_response("related_tag_record_found_on_deletion", status.HTTP_400_BAD_REQUEST)
+        return error_response("related_lead_record_found_on_deletion", status.HTTP_400_BAD_REQUEST)
 
     lead.attachments.all().update(deleted_at=timezone.now())
     lead.trackings.all().update(deleted_at=timezone.now())
@@ -540,7 +554,7 @@ def generate_leads(request):
     source = data.get('source')
 
     business_id = decrypt_business_id(business_id)
-    source = Source.objects.filter(name__iexact=source, business_id=business_id).first()
+    source = Source.objects.filter(slug__iexact=source, business_id=business_id).first()
     if not source:
         return error_response('source_not_found', status.HTTP_404_NOT_FOUND)
     

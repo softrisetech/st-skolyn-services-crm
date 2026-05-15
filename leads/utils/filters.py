@@ -36,7 +36,8 @@ def lead_follow_up_search_filter(queryset, filters):
     search_query = filters.get('search')
     if search_query:
         queryset = queryset.filter(
-            Q(follow_up_type__name__icontains=search_query)
+            Q(follow_up_type__name__icontains=search_query) |
+            Q(description__icontains=search_query)
         )
 
     return queryset
@@ -54,6 +55,21 @@ def filter_by_lead_pre_requisite_search_filter(queryset, filters):
 
     return queryset
 
+
+def filter_by_institutes(queryset, filters):
+    institute_ids = filters.get('institute_ids')
+    if institute_ids:
+        # Ensure institute_ids is a list; if it's a single string, convert it into a list
+        if isinstance(institute_ids, str):
+            institute_ids = institute_ids.split(',')  # Convert to a list after stripping spaces
+        elif isinstance(institute_ids, list):
+            institute_ids = [b.strip() for b in institute_ids if b.strip()]  # Remove empty values
+
+        # Apply filter if the list is not empty
+        if institute_ids:
+            queryset = queryset.filter(institute_id__in=institute_ids)
+
+    return queryset
 
 def filter_by_branches(queryset, filters):
     branch_ids = filters.get('branch_ids')
@@ -331,10 +347,19 @@ def filter_by_type(queryset, filters):
 
     return queryset
 
-def filter_by_priority(queryset, filters):
-    priority = filters.get('priority')
-    if priority:
-        queryset = queryset.filter(priority=priority)
+
+def filter_by_priorities(queryset, filters):
+    priorities = filters.get('priorities')
+    if priorities:
+        # Ensure priorities is a list; if it's a single string, convert it into a list
+        if isinstance(priorities, str):
+            priorities = priorities.split(',')  # Convert to a list after stripping spaces
+        elif isinstance(priorities, list):
+            priorities = [b.strip() for b in priorities if b.strip()]  # Remove empty values
+
+        # Apply filter if the list is not empty
+        if priorities:
+            queryset = queryset.filter(priority__in=priorities)
 
     return queryset
 

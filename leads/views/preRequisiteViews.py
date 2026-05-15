@@ -9,9 +9,13 @@ from core.utils.decorators import access_control_middleware
 from core.utils.date_time_converter import DateTimeConverter
 from core.utils.response_utils import success_response, error_response
 from core.utils.notification_utils import notification, notification_obj
-from ..utils.filters import filter_by_lead_pre_requisite_search_filter
 from django.db import transaction
 from django.utils import timezone
+from ..utils.filters import (
+    filter_by_lead_pre_requisite_search_filter,
+    filter_by_institutes,
+    filter_by_sort_order
+)
 
 
 def __queryset(business_id, lead_id):
@@ -20,6 +24,8 @@ def __queryset(business_id, lead_id):
 
 def __apply_filters(queryset, filters):
     queryset = filter_by_lead_pre_requisite_search_filter(queryset, filters)
+    queryset = filter_by_institutes(queryset, filters)
+    queryset = filter_by_sort_order(queryset, filters)
     return queryset
 
 @api_view(['POST'])

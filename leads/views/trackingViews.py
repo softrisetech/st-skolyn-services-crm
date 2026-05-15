@@ -1,5 +1,6 @@
-from ..models import Tracking, Lead
+from django.db.models import Q
 from rest_framework import status
+from ..models import Tracking, Lead
 from ..serializers import TrackingSerializer
 from rest_framework.decorators import api_view
 from core.utils.pagination_utils import CustomPagination
@@ -12,10 +13,12 @@ def __queryset(business_id, lead_id):
 
 
 def __apply_filters(queryset, filters):
-    lead_id = filters.get('lead_id')
-    if lead_id is not None:
-        queryset = queryset.filter(lead_id=lead_id)
-
+    search_query = filters.get('search')
+    if search_query:
+        queryset = queryset.filter(
+            Q(model_type__icontains=search_query)
+        )
+        
     return queryset.order_by('-created_at')
 
 
