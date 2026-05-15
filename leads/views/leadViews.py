@@ -274,6 +274,10 @@ def get_lead(request, pk):
     userTimezone = data.get("auth_timezone")
     queryset = __queryset(data, business_id)
     lead = queryset.filter(id=pk).first()
+
+    if not lead:
+        return error_response('lead_not_found', status.HTTP_404_NOT_FOUND)
+    
     serialized_data = LeadGetSerializer(lead).data
 
     if serialized_data["imported_at"]:
