@@ -36,7 +36,8 @@ def lead_follow_up_search_filter(queryset, filters):
     search_query = filters.get('search')
     if search_query:
         queryset = queryset.filter(
-            Q(follow_up_type__name__icontains=search_query)
+            Q(follow_up_type__name__icontains=search_query) |
+            Q(description__icontains=search_query)
         )
 
     return queryset
