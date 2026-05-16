@@ -54,7 +54,7 @@ def get_high_priority_no_followup_leads(request):
         date_time__gte=threshold
     )
     queryset = __queryset(data, business_id, use_report_db=True).filter(
-        priority=1,
+        priority='high',
     ).exclude(
         stage__type__in=['won', 'lost']
     ).filter(
