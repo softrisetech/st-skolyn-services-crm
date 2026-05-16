@@ -210,7 +210,7 @@ def get_leads_funnel(request):
     stages = list(
         Stage.objects.filter(
             business_id=business_id,
-            is_active=True
+            # is_active=True
         )
         .exclude(type=LOST)
         .order_by("priority")
