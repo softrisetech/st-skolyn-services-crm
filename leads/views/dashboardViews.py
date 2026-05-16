@@ -109,9 +109,22 @@ def get_leads_summary(request):
 
     # Dynamic stage-wise counts
     stage_counts = (
-        queryset
-        .values('stage__id', 'stage__name', 'stage__type', 'stage__priority')
-        .annotate(count=Count('id')).order_by('stage__priority')
+        Stage.objects
+        .filter(business_id=business_id)
+        .annotate(
+            count=Count(
+                'lead',
+                filter=Q(lead__in=queryset)
+            )
+        )
+        .values(
+            'id',
+            'name',
+            'type',
+            'priority',
+            'count'
+        )
+        .order_by('priority')
     )
 
     stages_summary = []
