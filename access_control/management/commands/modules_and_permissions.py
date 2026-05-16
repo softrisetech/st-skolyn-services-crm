@@ -559,7 +559,7 @@ PERMISSIONS = [
                 "sort_order": 1
             },
             {
-                "name": "High Priority Exports",
+                "name": "High Priority Pending Follow-Ups Export",
                 "url": "reports/export/high-priority-no-followup/",
                 "frontend_url": "/crm/reports/high-priority-exports",
                 "key": "",
@@ -631,7 +631,7 @@ PERMISSIONS = [
                 "sort_order": 5
             },
             {
-                "name": "Lost Leads Export",
+                "name": "Lost Leads Analysis Export",
                 "url": "reports/export/lost-leads/",
                 "frontend_url": "/crm/reports/lost-leads-exports",
                 "key": "",
