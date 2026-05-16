@@ -133,8 +133,8 @@ def get_leads_summary(request):
         percentage = (stage['count'] / total_leads) * 100 if total_leads > 0 else 0
 
         stages_summary.append({
-            "name": stage['stage__name'],
-            "type": stage['stage__type'],
+            "name": stage['name'],
+            "type": stage['type'],
             "count": stage['count'],
             "percentage": round(percentage, 2)
         })
