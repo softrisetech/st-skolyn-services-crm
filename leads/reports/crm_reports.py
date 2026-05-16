@@ -18,6 +18,7 @@ from report_export.utils.constants import constants
 from report_export.utils.export_helpers import export_entry, export_obj
 
 from ..views.followUpViews import __queryset as __followup_queryset
+from ..utils.constants import PRIORITY_HIGH
 
 def __apply_filters(queryset, filters):
     queryset = lead_search_filter(queryset, filters)
@@ -54,7 +55,7 @@ def get_high_priority_no_followup_leads(request):
         date_time__gte=threshold
     )
     queryset = __queryset(data, business_id, use_report_db=True).filter(
-        priority='high',
+        priority=PRIORITY_HIGH,
     ).exclude(
         stage__type__in=['won', 'lost']
     ).filter(
