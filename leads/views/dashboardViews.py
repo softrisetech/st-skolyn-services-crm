@@ -136,12 +136,12 @@ def get_leads_summary(request):
             "name": stage['name'],
             "type": stage['type'],
             "count": stage['count'],
-            "percentage": round(percentage, 2)
+            "percentage": percentage
         })
 
     # Optional system KPIs
     won_leads = sum(s['count'] for s in stages_summary if s['type'] == WON)
-    conversion_rate = round((won_leads / total_leads) * 100, 2) if total_leads > 0 else 0
+    conversion_rate = ((won_leads / total_leads) * 100) if total_leads > 0 else 0
 
     summary = {
         "total_leads": total_leads,
