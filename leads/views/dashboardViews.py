@@ -2,19 +2,18 @@ import calendar
 from django.db.models import Q
 from rest_framework import status
 from collections import defaultdict
-from django.db.models import Count, F, OuterRef, Subquery
+from django.db.models import Count, F, OuterRef, Subquery, Sum, Value
 from datetime import datetime, timedelta
 from rest_framework.decorators import api_view
 from access_control.utils.permission_helpers import *
 from core.utils.response_utils import success_response
 from access_control.utils.permission_constants import *
-from ..models import Lead, Source, Medium, Stage, Campaign, StageReasonEntry, SessionTarget
+from ..models import Lead, Source, Medium, Stage, Campaign, StageReasonEntry, SessionTarget, StageReason
 from ..serializers import DashboardCampaignSerializer
 from core.utils.pagination_utils import CustomPagination
 from core.constants.model_constants import WON, LOST
 from dateutil.relativedelta import relativedelta
-from django.db.models.functions import TruncDate
-from django.db.models import Sum
+from django.db.models.functions import TruncDate, Coalesce
 
 from leads.utils.filters import (
     filter_by_classes, 
@@ -432,62 +431,66 @@ def get_lost_leads_by_reason(request):
     queryset = __queryset(data, business_id)
     queryset = __apply_filters(queryset, data)
 
-    # LOST stages
+    # Step 1: LOST stages
     lost_stage_ids = Stage.objects.filter(
         business_id=business_id,
         type=LOST
     ).values_list("id", flat=True)
 
-    # Only leads whose CURRENT stage is LOST
+    # Step 2: LOST leads
     lost_leads = queryset.filter(stage_id__in=lost_stage_ids)
 
     total_lost_leads = lost_leads.count()
 
-    # Latest lost reason entry per lead
+    # Step 3: latest reason per lead
     latest_reason_entry = StageReasonEntry.objects.filter(
         lead_id=OuterRef('pk'),
         stage_id__in=lost_stage_ids
-    ).order_by('-created_at')
+    ).order_by('-created_at', '-id')
 
-    # Annotate latest reason entry id
     lost_leads = lost_leads.annotate(
-        latest_reason_entry_id=Subquery(
+        latest_reason_id=Subquery(
             latest_reason_entry.values('id')[:1]
         )
     )
 
-    # Fetch latest entries
     latest_entries = StageReasonEntry.objects.filter(
-        id__in=lost_leads.values('latest_reason_entry_id')
+        id__in=lost_leads.values('latest_reason_id')
     )
 
-    # Aggregate reason counts
-    lost_reason_summary = latest_entries.values(
-        reason=F('stage_reason__name')
+    # Step 4: ALL LOST reasons (IMPORTANT CHANGE)
+    all_reasons = StageReason.objects.filter(
+        stage_id__in=lost_stage_ids
     ).annotate(
-        count=Count('lead_id', distinct=True)
-    ).order_by('-count')
+        count=Count(
+            'stagereasonentry',
+            filter=Q(
+                stagereasonentry__id__in=latest_entries.values('id')
+            )
+        )
+    ).annotate(
+        safe_count=Coalesce(F('count'), Value(0))
+    ).order_by('-safe_count')[:5]
 
+    # Step 5: format response
     reasons_with_percentage = [
         {
-            "reason": item["reason"] or "Unknown",
-            "count": item["count"],
+            "reason": r.name,
+            "count": r.safe_count,
             "percentage": round(
-                (item["count"] / total_lost_leads) * 100, 2
-            ) if total_lost_leads > 0 else 0
+                (r.safe_count / total_lost_leads) * 100, 2
+            ) if total_lost_leads else 0
         }
-        for item in lost_reason_summary
+        for r in all_reasons
     ]
-
-    response_data = {
-        "total_leads": total_lost_leads,
-        "lost_reasons": reasons_with_percentage
-    }
 
     return success_response(
         "record_fetched",
         status.HTTP_200_OK,
-        response_data
+        {
+            "total_leads": total_lost_leads,
+            "lost_reasons": reasons_with_percentage
+        }
     )
 
 @api_view(['POST'])
