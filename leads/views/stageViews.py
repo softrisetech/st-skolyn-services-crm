@@ -80,6 +80,11 @@ def store_lead_stage(request):
     if is_default:
         Stage.objects.filter(business_id=business_id, is_default=True).update(is_default=False)
 
+    else: 
+        stage_default_exists = Stage.objects.filter(business_id=business_id, is_default=True).exists()
+        if not stage_default_exists:
+            return error_response('atleast_add_one_open_default_stage', status.HTTP_422_UNPROCESSABLE_ENTITY)
+
     if data["type"] in [WON, LOST]:
         return error_response('you_cannot_create_these_stage_types', status.HTTP_422_UNPROCESSABLE_ENTITY)
 
@@ -130,14 +135,13 @@ def update_lead_stage(request, pk=None):
                 status.HTTP_422_UNPROCESSABLE_ENTITY
             )
 
-    if is_default in [True, "true", 1, "1"]:
+    if is_default:
         if data["type"] in [WON, LOST]:
             return error_response('you_cannot_set_default_these_stage_types', status.HTTP_422_UNPROCESSABLE_ENTITY)
 
         Stage.objects.filter(business_id=business_id, is_default=True).update(is_default=False)
     else:
-        default_stage_count = Stage.objects.filter(business_id=business_id, is_default=True).count()
-        if default_stage_count <= 1:
+        if stage.is_default:
             return error_response('atleast_one_stage_should_be_default', status.HTTP_422_UNPROCESSABLE_ENTITY)
 
     serializer = StageSerializer(instance=stage, data=data, partial=False)
