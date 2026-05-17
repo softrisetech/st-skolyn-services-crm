@@ -136,8 +136,8 @@ def update_lead_stage(request, pk=None):
 
         Stage.objects.filter(business_id=business_id, is_default=True).update(is_default=False)
     else:
-        stage_default_exists = Stage.objects.filter(business_id=business_id, is_default=True).exists()
-        if not stage_default_exists:
+        default_stage_count = Stage.objects.filter(business_id=business_id, is_default=True).count()
+        if default_stage_count == 1:
             return error_response('atleast_one_stage_should_be_default', status.HTTP_422_UNPROCESSABLE_ENTITY)
 
     serializer = StageSerializer(instance=stage, data=data, partial=False)
