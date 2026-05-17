@@ -170,7 +170,7 @@ def get_session_target(data, business_id):
         )
 
         # If user does NOT have permission → restrict to own branch
-        if not have_branch_wise_permission:
+        if have_branch_wise_permission:
             branch_id = data.get("auth_branch_id")
 
             additional_branch_ids = data.get("auth_additional_branch_ids", [])
