@@ -77,7 +77,7 @@ def store_lead_stage(request):
     is_default = data.get('is_default')
 
     #check if stage is set as default and type is lost, won
-    if is_default:
+    if is_default in [True, "true", 1, "1"]:
         Stage.objects.filter(business_id=business_id, is_default=True).update(is_default=False)
 
     else: 
@@ -135,7 +135,7 @@ def update_lead_stage(request, pk=None):
                 status.HTTP_422_UNPROCESSABLE_ENTITY
             )
 
-    if is_default:
+    if is_default in [True, "true", 1, "1"]:
         if data["type"] in [WON, LOST]:
             return error_response('you_cannot_set_default_these_stage_types', status.HTTP_422_UNPROCESSABLE_ENTITY)
 
