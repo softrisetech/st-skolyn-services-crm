@@ -160,6 +160,9 @@ def delete_lead_stage(request, pk=None):
     stage = __queryset(business_id).filter(id=pk).first()
     if not stage:
         return error_response('stage_not_found', status.HTTP_404_NOT_FOUND)
+    
+    if stage.is_default:
+            return error_response('atleast_one_stage_should_be_default', status.HTTP_422_UNPROCESSABLE_ENTITY)
 
     if check_if_stage_is_last_of_its_type(stage):
         return error_response('last_stage_deletion_not_allowed', status.HTTP_422_UNPROCESSABLE_ENTITY)
