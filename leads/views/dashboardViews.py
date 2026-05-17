@@ -200,12 +200,6 @@ def get_leads_funnel(request):
     # 🔹 total target
     total_target = get_session_target(data, business_id)
 
-    return success_response("record_fetched", status.HTTP_200_OK, {
-        "total_leads": total_leads,
-        "total_target": total_target,
-        "funnel": []
-    })
-
     # 🔹 remove lost/null
     lost_stage_ids = Stage.objects.filter(
         business_id=business_id,
