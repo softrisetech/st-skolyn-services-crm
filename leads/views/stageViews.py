@@ -107,6 +107,9 @@ def update_lead_stage(request, pk=None):
     data['business_id'] = business_id
     is_default = data.get('is_default')
 
+    if data["type"] in [WON, LOST]:
+        return error_response('you_cannot_create_these_stage_types', status.HTTP_422_UNPROCESSABLE_ENTITY)
+
     is_last_stage = check_if_stage_is_last_of_its_type(stage)
     new_type = data.get("type")
     is_active = data.get("is_active")

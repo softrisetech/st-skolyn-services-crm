@@ -434,43 +434,57 @@ def get_lost_leads_by_reason(request):
         type=LOST
     ).values_list("id", flat=True)
 
-    # Only lost leads
+    # Only leads whose CURRENT stage is LOST
     lost_leads = queryset.filter(stage_id__in=lost_stage_ids)
+
     total_lost_leads = lost_leads.count()
 
-    # 🔥 Subquery to get latest StageReasonEntry per lead
-    latest_entry_subquery = StageReasonEntry.objects.filter(
-        lead=OuterRef('lead_id'),
+    # Latest lost reason entry per lead
+    latest_reason_entry = StageReasonEntry.objects.filter(
+        lead_id=OuterRef('pk'),
         stage_id__in=lost_stage_ids
-    ).order_by('-created_at')  # latest first
+    ).order_by('-created_at')
 
+    # Annotate latest reason entry id
+    lost_leads = lost_leads.annotate(
+        latest_reason_entry_id=Subquery(
+            latest_reason_entry.values('id')[:1]
+        )
+    )
+
+    # Fetch latest entries
     latest_entries = StageReasonEntry.objects.filter(
-        id__in=Subquery(latest_entry_subquery.values('id')[:1])
+        id__in=lost_leads.values('latest_reason_entry_id')
     )
 
-    # Aggregate by reason
+    # Aggregate reason counts
     lost_reason_summary = latest_entries.values(
-        reason=F("stage_reason__name")
+        reason=F('stage_reason__name')
     ).annotate(
-        count=Count("lead", distinct=True)
-    )
+        count=Count('lead_id', distinct=True)
+    ).order_by('-count')
 
     reasons_with_percentage = [
         {
-            "reason": entry["reason"] or "Unknown",
-            "count": entry["count"],
-            "percentage": round((entry["count"] / total_lost_leads) * 100, 2)
-            if total_lost_leads > 0 else 0
+            "reason": item["reason"] or "Unknown",
+            "count": item["count"],
+            "percentage": round(
+                (item["count"] / total_lost_leads) * 100, 2
+            ) if total_lost_leads > 0 else 0
         }
-        for entry in lost_reason_summary
+        for item in lost_reason_summary
     ]
 
-    data = {
+    response_data = {
         "total_leads": total_lost_leads,
         "lost_reasons": reasons_with_percentage
     }
 
-    return success_response("record_fetched", status.HTTP_200_OK, data)
+    return success_response(
+        "record_fetched",
+        status.HTTP_200_OK,
+        response_data
+    )
 
 @api_view(['POST'])
 def get_leads_conversion_trend(request):

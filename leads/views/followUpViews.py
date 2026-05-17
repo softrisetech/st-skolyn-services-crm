@@ -99,7 +99,7 @@ def store_lead_follow_up(request, lead_id):
 
     serializer.save()
 
-    email_notifications = handle_lead_email_notifications(data, user_timezone, ["assigned_to", "parent_email"], email_notifications, "follow_up_created", lead)
+    email_notifications = handle_lead_email_notifications(data, user_timezone, ["assigned_to"], email_notifications, "follow_up_created", lead)
     other['notification'] = notification(email_notifications)
     return success_response('record_stored', status.HTTP_201_CREATED, serializer.data, other)
 
