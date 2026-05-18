@@ -98,9 +98,9 @@ def store_lead_follow_up(request, lead_id):
     if not serializer.is_valid():
         return error_response('record_store_failed', status.HTTP_422_UNPROCESSABLE_ENTITY, serializer.errors)
 
-    serializer.save()
+    follow_up = serializer.save()
 
-    email_notifications = handle_lead_email_notifications(data, user_timezone, ["assigned_to"], email_notifications, "follow_up_created", lead, None, None, follow_up_type.name, date_time)
+    email_notifications = handle_lead_email_notifications(data, user_timezone, ["assigned_to"], email_notifications, "follow_up_created", lead, None, None, follow_up_type.name, date_time, follow_up.description)
     other['notification'] = notification(email_notifications)
     return success_response('record_stored', status.HTTP_201_CREATED, serializer.data, other)
 
