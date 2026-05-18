@@ -344,7 +344,7 @@ def filter_by_generated(queryset, filters):
 
 def filter_by_active(queryset, filters):
     is_active = filters.get('is_active')
-    if is_active:
+    if is_active is not None:
         queryset = queryset.filter(is_active=is_active)
 
     return queryset
