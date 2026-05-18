@@ -149,6 +149,7 @@ def handle_lead_web_notifications(data, user_timezone, sender_keys, email_notifi
         trigger,
         recipients,
         {
+            'lead_id': lead.id,
             'business_id': lead.business_id,
             'business_name': business_name if business_name else None,
             'branch_id': lead.branch_id,

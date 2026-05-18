@@ -7,7 +7,10 @@ from core.utils.decorators import access_control_middleware
 from core.utils.date_time_converter import DateTimeConverter
 from core.utils.response_utils import success_response, error_response
 from core.utils.notification_utils import notification, notification_obj
-from ..utils.lead_utils import handle_lead_email_notifications
+from ..utils.lead_utils import (
+    handle_lead_email_notifications,
+    handle_lead_web_notifications
+)
 from ..utils.filters import (
     filter_by_created_bys, 
     filter_by_start_and_end_date, 
@@ -101,7 +104,8 @@ def store_lead_follow_up(request, lead_id):
     follow_up = serializer.save()
 
     email_notifications = handle_lead_email_notifications(data, user_timezone, ["assigned_to"], email_notifications, "follow_up_created", lead, None, None, follow_up_type.name, date_time, follow_up.description)
-    other['notification'] = notification(email_notifications)
+    web_notifications = handle_lead_web_notifications(data, user_timezone, ["assigned_to"], web_notifications, "follow_up_created", lead)
+    other['notification'] = notification(email_notifications, web_notifications)
     return success_response('record_stored', status.HTTP_201_CREATED, serializer.data, other)
 
 @api_view(['POST'])
