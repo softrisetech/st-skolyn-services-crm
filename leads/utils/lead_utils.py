@@ -61,7 +61,18 @@ def decrypt_business_id(encrypted_id):
     except Exception:
         return None
     
-def handle_lead_email_notifications(data, user_timezone, sender_keys, email_notifications, trigger, lead, stage_reason=None, remarks=None):
+def handle_lead_email_notifications(
+        data, 
+        user_timezone, 
+        sender_keys, 
+        email_notifications, 
+        trigger, 
+        lead, 
+        stage_reason=None, 
+        remarks=None, 
+        follow_up_type=None, 
+        follow_up_date_time=None
+        ):
     recipients = []
     branch = data.get("branch")
     class_data = data.get("class")
@@ -86,6 +97,7 @@ def handle_lead_email_notifications(data, user_timezone, sender_keys, email_noti
         trigger,
         recipients,
         {
+            'lead_id': lead.id,
             'business_id': lead.business_id,
             'business_name': business_name if business_name else None,
             'branch_id': lead.branch_id,
@@ -102,6 +114,8 @@ def handle_lead_email_notifications(data, user_timezone, sender_keys, email_noti
             'reason': remarks,
             'object_id': lead.stage_id,
             'sub_object_id': stage_reason.id if stage_reason else None,
+            'follow_up_type_name': follow_up_type if follow_up_type else None,
+            'follow_up_date_time': follow_up_date_time if follow_up_date_time else None
         }
     ))
         

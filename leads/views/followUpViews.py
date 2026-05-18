@@ -81,6 +81,7 @@ def store_lead_follow_up(request, lead_id):
     data['created_by'] = request.data.get('auth_id')
     data['follow_up_type'] = request.data.get('follow_up_type')
     user_timezone = data.get("auth_timezone")
+    date_time = data["date_time"]
     web_notifications, email_notifications, other = [], [], {}
 
     follow_up_type = FollowUpType.objects.filter(id=data['follow_up_type'], business_id=data['business_id']).first()
@@ -92,14 +93,14 @@ def store_lead_follow_up(request, lead_id):
         return error_response('lead_not_found', status.HTTP_404_NOT_FOUND)
 
     data['lead'] = lead.id
-    data["date_time"] = DateTimeConverter.to_utc_datetime(data["date_time"], user_timezone)
+    data["date_time"] = DateTimeConverter.to_utc_datetime(date_time, user_timezone)
     serializer = FollowUpSerializer(data=data)
     if not serializer.is_valid():
         return error_response('record_store_failed', status.HTTP_422_UNPROCESSABLE_ENTITY, serializer.errors)
 
     serializer.save()
 
-    email_notifications = handle_lead_email_notifications(data, user_timezone, ["assigned_to"], email_notifications, "follow_up_created", lead)
+    email_notifications = handle_lead_email_notifications(data, user_timezone, ["assigned_to"], email_notifications, "follow_up_created", lead, None, None, follow_up_type.name, date_time)
     other['notification'] = notification(email_notifications)
     return success_response('record_stored', status.HTTP_201_CREATED, serializer.data, other)
 
