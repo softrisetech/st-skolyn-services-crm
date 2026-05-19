@@ -555,6 +555,7 @@ def generate_leads(request):
     source = data.get('source')
 
     business_id = decrypt_business_id(business_id)
+    data["business_id"] = business_id
     data["auth_business_id"] = business_id
     source = Source.objects.filter(id=source, business_id=business_id).first()
     if not source:
