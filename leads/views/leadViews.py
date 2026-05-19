@@ -555,7 +555,7 @@ def generate_leads(request):
     source = data.get('source')
 
     business_id = decrypt_business_id(business_id)
-    source = Source.objects.filter(slug__iexact=source, business_id=business_id).first()
+    source = Source.objects.filter(id=source, business_id=business_id).first()
     if not source:
         return error_response('source_not_found', status.HTTP_404_NOT_FOUND)
     
