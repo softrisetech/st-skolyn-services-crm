@@ -24,7 +24,7 @@ def access_control_middleware(view_func):
             return view_func(*args, **kwargs)
 
         url = get_current_url(request)
-        permission = Permission.objects.filter(url__icontains=url.rstrip('/')).first()
+        permission = Permission.objects.filter(url__iexact=url.rstrip('/')).first()
 
         if not permission:
             return view_func(*args, **kwargs)
