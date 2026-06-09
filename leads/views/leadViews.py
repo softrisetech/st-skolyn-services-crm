@@ -131,7 +131,8 @@ def __queryset(data, business_id, use_report_db=False):
             additional_branch_ids = data.get("auth_additional_branch_ids", [])
             all_branch_ids = list(filter(None, [branch_id] + (additional_branch_ids if isinstance(additional_branch_ids, list) else [])))
             
-            queryset = queryset.filter(branch_id__in=all_branch_ids)
+            if all_branch_ids:
+                queryset = queryset.filter(branch_id__in=all_branch_ids)
 
         return queryset
 
@@ -554,7 +555,9 @@ def generate_leads(request):
     source = data.get('source')
 
     business_id = decrypt_business_id(business_id)
-    source = Source.objects.filter(slug__iexact=source, business_id=business_id).first()
+    data["business_id"] = business_id
+    data["auth_business_id"] = business_id
+    source = Source.objects.filter(id=source, business_id=business_id).first()
     if not source:
         return error_response('source_not_found', status.HTTP_404_NOT_FOUND)
     

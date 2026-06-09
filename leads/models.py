@@ -163,6 +163,9 @@ class Contact(BaseBusinessModel):
     mother_nic = models.CharField(max_length=CHAR_LENGTH, null=True, blank=True)
     is_father_applicable = models.BooleanField(default=True)
     is_mother_applicable = models.BooleanField(default=True)
+    
+    class Meta:
+        ordering = ['-updated_at']
 
 
 class Lead(BaseBusinessModel):

@@ -15,12 +15,21 @@ def _parse_bool(value):
     return None
 
 
+
 def lead_search_filter(queryset, filters):
     search_query = filters.get('search')
+
     if search_query:
-        queryset = queryset.filter(
+        queryset = queryset.annotate(
+            full_name=Concat(
+                'first_name',
+                Value(' '),
+                'last_name'
+            )
+        ).filter(
             Q(first_name__icontains=search_query) |
             Q(last_name__icontains=search_query) |
+            Q(full_name__icontains=search_query) |
             Q(contact_number__icontains=search_query) |
             Q(email__icontains=search_query) |
             Q(nic__icontains=search_query) |
@@ -335,7 +344,7 @@ def filter_by_generated(queryset, filters):
 
 def filter_by_active(queryset, filters):
     is_active = filters.get('is_active')
-    if is_active:
+    if is_active is not None:
         queryset = queryset.filter(is_active=is_active)
 
     return queryset

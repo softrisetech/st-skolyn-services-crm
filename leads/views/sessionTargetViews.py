@@ -28,7 +28,11 @@ def __queryset(data, business_id):
 
         if have_branch_wise_permission:
             branch_id = data.get("auth_branch_id")
-            queryset = queryset.filter(branch_id=branch_id)
+            additional_branch_ids = data.get("auth_additional_branch_ids", [])
+            all_branch_ids = list(filter(None, [branch_id] + (additional_branch_ids if isinstance(additional_branch_ids, list) else [])))
+
+            if all_branch_ids:
+                queryset = queryset.filter(branch_id__in=all_branch_ids)
 
         return queryset
 

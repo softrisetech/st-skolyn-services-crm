@@ -77,8 +77,13 @@ def store_lead_stage(request):
     is_default = data.get('is_default')
 
     #check if stage is set as default and type is lost, won
-    if is_default:
+    if is_default in [True, "true", 1, "1"]:
         Stage.objects.filter(business_id=business_id, is_default=True).update(is_default=False)
+
+    else: 
+        stage_default_exists = Stage.objects.filter(business_id=business_id, is_default=True).exists()
+        if not stage_default_exists:
+            return error_response('atleast_add_one_open_default_stage', status.HTTP_422_UNPROCESSABLE_ENTITY)
 
     if data["type"] in [WON, LOST]:
         return error_response('you_cannot_create_these_stage_types', status.HTTP_422_UNPROCESSABLE_ENTITY)
@@ -107,6 +112,9 @@ def update_lead_stage(request, pk=None):
     data['business_id'] = business_id
     is_default = data.get('is_default')
 
+    if data["type"] in [WON, LOST]:
+        return error_response('you_cannot_create_these_stage_types', status.HTTP_422_UNPROCESSABLE_ENTITY)
+
     is_last_stage = check_if_stage_is_last_of_its_type(stage)
     new_type = data.get("type")
     is_active = data.get("is_active")
@@ -127,8 +135,15 @@ def update_lead_stage(request, pk=None):
                 status.HTTP_422_UNPROCESSABLE_ENTITY
             )
 
-    if is_default:
+    if is_default in [True, "true", 1, "1"]:
+        if data["type"] in [WON, LOST]:
+            return error_response('you_cannot_set_default_these_stage_types', status.HTTP_422_UNPROCESSABLE_ENTITY)
+
         Stage.objects.filter(business_id=business_id, is_default=True).update(is_default=False)
+    else:
+        default_stage_count = Stage.objects.filter(business_id=business_id, is_default=True).count()
+        if stage.is_default or default_stage_count == 0:
+            return error_response('atleast_one_stage_should_be_default', status.HTTP_422_UNPROCESSABLE_ENTITY)
 
     serializer = StageSerializer(instance=stage, data=data, partial=False)
     if not serializer.is_valid():
@@ -145,6 +160,9 @@ def delete_lead_stage(request, pk=None):
     stage = __queryset(business_id).filter(id=pk).first()
     if not stage:
         return error_response('stage_not_found', status.HTTP_404_NOT_FOUND)
+    
+    if stage.is_default:
+            return error_response('atleast_one_stage_should_be_default', status.HTTP_422_UNPROCESSABLE_ENTITY)
 
     if check_if_stage_is_last_of_its_type(stage):
         return error_response('last_stage_deletion_not_allowed', status.HTTP_422_UNPROCESSABLE_ENTITY)
