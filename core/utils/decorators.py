@@ -20,11 +20,12 @@ def access_control_middleware(view_func):
             data = request.GET or request.POST
 
         is_staff = check_if_user_is_staff(data)
+        print(f"is_staff: {is_staff}")
         if is_staff not in [True, "true"]:
             return view_func(*args, **kwargs)
 
         url = get_current_url(request)
-        permission = Permission.objects.filter(url__iexact=url.rstrip('/')).first()
+        permission = get_permission_for_url(url)
 
         if not permission:
             return view_func(*args, **kwargs)
@@ -37,6 +38,7 @@ def access_control_middleware(view_func):
                 f'Access denied: no role assigned to perform "{permission.name}" on "{readable_url}"',
                 status.HTTP_403_FORBIDDEN
             )
+            
 
         if not RolePermission.objects.filter(role_id=role_id, permission_id=permission.id).exists():
             return error_response(
@@ -68,3 +70,12 @@ def get_current_url(request):
 def get_readable_url(url):
     segment = url.lstrip('/').rstrip('/').split('/')[0]
     return segment.replace('-', ' ').replace('_', ' ').title()
+
+
+def get_permission_for_url(url):
+    normalized = url.rstrip('/').lower()
+    for perm in Permission.objects.all():
+        urls = [u.strip().rstrip('/').lower() for u in perm.url.split(',')]
+        if normalized in urls:
+            return perm
+    return None
